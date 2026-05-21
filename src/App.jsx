@@ -55,6 +55,14 @@ const ORDER_TYPES = [
   { key: "collab",    label: "Collab/Content", icon: "🤝", color: "#A78BC7" },
 ];
 
+const EVENT_TYPES = [
+  { key: "booth",     label: "ออกบูธ",           icon: "🏪", color: "#C9A96E" },
+  { key: "workshop",  label: "Workshop/คลาส",     icon: "🎨", color: "#8BA7C7" },
+  { key: "customer",  label: "ลูกค้านัดเข้าร้าน", icon: "🤝", color: "#8BC7A7" },
+  { key: "meeting",   label: "ประชุม/คุยงาน",     icon: "💬", color: "#C7B98B" },
+  { key: "other",     label: "กิจกรรมอื่นๆ",      icon: "📌", color: "#A78BC7" },
+];
+
 const PRODUCT_CATS = [
   { key: "paint",   label: "สีและอุปกรณ์ทาสี", icon: "🎨", color: "#C9A96E" },
   { key: "cloth",   label: "ถุงเท้า / เสื้อผ้า",  icon: "🧦", color: "#8BA7C7" },
@@ -495,7 +503,7 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
   );
 }
 
-function CalView({orders,workPlans,workSchedules}){
+function CalView({orders,workPlans,workSchedules,shopEvents}){
   const now=new Date();
   const [month,setMonth]=useState(now.getMonth());
   const [year,setYear]=useState(now.getFullYear());
@@ -537,6 +545,16 @@ function CalView({orders,workPlans,workSchedules}){
                   </div>
                   {dayOrders.length>0&&<span style={{fontFamily:"'DM Sans', sans-serif",fontSize:9,color:C.muted}}>📦 {dayOrders.length}</span>}
                 </div>
+                {/* Shop Events */}
+                {(shopEvents||[]).filter(e=>{ const start=e.date; const end=e.endDate||e.date; return dk>=start&&dk<=end; }).map((e,i)=>{
+                  const et=EVENT_TYPES.find(t=>t.key===e.type);
+                  return(
+                    <div key={"ev"+i} style={{background:et?.color+"20",border:`1px solid ${et?.color}44`,borderLeft:`3px solid ${et?.color}`,borderRadius:6,padding:"4px 8px",marginBottom:4}}>
+                      <span style={{fontFamily:"'Inter', sans-serif",fontSize:12,color:et?.color,fontWeight:600}}>{et?.icon} {e.title||et?.label}</span>
+                      {e.note&&<span style={{fontFamily:"'DM Sans', sans-serif",fontSize:9,color:C.muted,marginLeft:6}}>{e.note}</span>}
+                    </div>
+                  );
+                })}
                 {/* Multi-day schedules */}
                 {(workSchedules||[]).filter(s=>{ const dates=[]; for(let i=0;i<s.days;i++){const d=new Date(s.startDate);d.setDate(d.getDate()+i);dates.push(d.toISOString().slice(0,10));}return dates.includes(dk); }).map((s,i)=>{
                   const order=orders.find(o=>String(o.id)===String(s.orderId));
@@ -589,6 +607,11 @@ function CalView({orders,workPlans,workSchedules}){
                       {day&&<div style={{fontSize:8,color:isToday?C.accent:C.muted,fontFamily:"'DM Sans', sans-serif"}}>{day}</div>}
                       {ords.map((o,i)=>{ const st=STATUSES.find(s=>s.key===o.status); return <div key={"o"+i} style={{fontSize:6,background:st.color+"22",color:st.color,border:`1px solid ${st.color}33`,borderRadius:2,padding:"1px 2px",marginTop:1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",fontFamily:"'DM Sans', sans-serif"}}>{o.customer}</div>; })}
                       {planTypes.map((pt,i)=>{ const dt=DAY_TYPES.find(d=>d.key===pt); return dt?<div key={"p"+i} style={{fontSize:5,background:dt.color+"15",color:dt.color,borderRadius:2,padding:"1px 2px",marginTop:1,border:`1px solid ${dt.color}25`,fontFamily:"'DM Sans', sans-serif",letterSpacing:0.5}}>{dt.short}</div>:null; })}
+                      {(shopEvents||[]).filter(e=>{
+                        if(!dk) return false;
+                        const start=e.date; const end=e.endDate||e.date;
+                        return dk>=start&&dk<=end;
+                      }).map((e,i)=>{ const et=EVENT_TYPES.find(t=>t.key===e.type); return <div key={"ev"+i} style={{fontSize:5,background:et?.color+"22",color:et?.color,borderRadius:2,padding:"1px 2px",marginTop:1,border:`1px solid ${et?.color}33`,fontFamily:"'DM Sans', sans-serif",fontWeight:700,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{et?.icon}{e.title?` ${e.title}`:""}</div>; })}
                       {(workSchedules||[]).filter(s=>{ const dates=[]; for(let i=0;i<s.days;i++){const d=new Date(s.startDate);d.setDate(d.getDate()+i);dates.push(d.toISOString().slice(0,10));} return dk&&dates.includes(dk); }).map((s,i)=>{
                         const order=orders.find(o=>String(o.id)===String(s.orderId));
                         const st2=order?STATUSES.find(st=>st.key===order.status):null;
@@ -622,7 +645,7 @@ function CalView({orders,workPlans,workSchedules}){
   );
 }
 
-function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orders}){
+function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orders,shopEvents,setShopEvents}){
   const [showAddSchedule,setShowAddSchedule]=useState(false);
   const [newSched,setNewSched]=useState({orderId:"",startDate:todayKey(),days:1,assignee:TEAM[0]});
 
@@ -645,15 +668,79 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orde
   }
 
   const now=new Date();
-  const ws=new Date(now); ws.setDate(now.getDate()-((now.getDay()+6)%7));
-  const days=Array.from({length:14},(_,i)=>{ const d=new Date(ws); d.setDate(ws.getDate()+i); return d; });
+  const [planMonth,setPlanMonth]=useState(now.getMonth());
+  const [planYear,setPlanYear]=useState(now.getFullYear());
+  const navPlanMonth=d=>{ let m=planMonth+d,y=planYear; if(m<0){m=11;y--;}if(m>11){m=0;y++;}setPlanMonth(m);setPlanYear(y); };
+  const daysInMonth=new Date(planYear,planMonth+1,0).getDate();
+  const days=Array.from({length:daysInMonth},(_,i)=>{ const d=new Date(planYear,planMonth,i+1); return d; });
+  const [showAddEvent,setShowAddEvent]=useState(false);
+  const [newEvent,setNewEvent]=useState({type:"booth",title:"",date:todayKey(),endDate:"",note:""});
+  const addEvent=()=>{
+    if(!newEvent.date) return;
+    setShopEvents(e=>[...e,{id:Date.now(),...newEvent}]);
+    setShowAddEvent(false);
+    setNewEvent({type:"booth",title:"",date:todayKey(),endDate:"",note:""});
+  };
+  const delEvent=id=>setShopEvents(e=>e.filter(x=>x.id!==id));
   const set=(dk,member,dayType)=>{
     setWorkPlans(p=>{ const cur=p[dk]||{}; const updated=dayType?{...cur,[member]:dayType}:{...cur}; if(!dayType)delete updated[member]; return {...p,[dk]:updated}; });
   };
   const applyAll=(dk,dayType)=>{ TEAM.forEach(m=>set(dk,m,dayType)); };
   return(
     <div>
-      <div style={{fontFamily:"'DM Sans', sans-serif",fontSize:9,color:C.muted,letterSpacing:2,marginBottom:14}}>กำหนดแผนงานรายวัน — พนักงานเห็นใน Calendar</div>
+      {/* Month navigation */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <button onClick={()=>navPlanMonth(-1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"5px 12px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif"}}>‹</button>
+        <span style={{fontFamily:"'Inter', sans-serif",fontWeight:600,fontSize:15,color:C.text}}>{MONTHS_TH[planMonth]} {planYear}</span>
+        <button onClick={()=>navPlanMonth(1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"5px 12px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif"}}>›</button>
+      </div>
+
+      {/* Add Shop Event */}
+      <div style={{marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <div style={S.sec("#C9A96E")}>📅 กิจกรรมพิเศษ</div>
+          <button onClick={()=>setShowAddEvent(s=>!s)} style={{background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:"5px 12px",fontSize:10,fontFamily:"'DM Sans', sans-serif",fontWeight:600,cursor:"pointer"}}>+ เพิ่มกิจกรรม</button>
+        </div>
+        {showAddEvent&&(
+          <div style={{...S.card,border:`1px solid ${C.accent}33`,marginBottom:10}}>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+              {EVENT_TYPES.map(et=>(
+                <button key={et.key} onClick={()=>setNewEvent(n=>({...n,type:et.key}))} style={{padding:"5px 10px",background:newEvent.type===et.key?et.color+"22":"transparent",color:newEvent.type===et.key?et.color:C.muted,border:`1px solid ${newEvent.type===et.key?et.color+"55":C.border}`,borderRadius:6,fontFamily:"'DM Sans', sans-serif",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+                  <span>{et.icon}</span><span>{et.label}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div><label style={S.lbl}>ชื่อกิจกรรม</label><input style={S.inp} value={newEvent.title} onChange={e=>setNewEvent(n=>({...n,title:e.target.value}))} placeholder="เช่น บูธ Central World"/></div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <div><label style={S.lbl}>วันเริ่ม</label><input type="date" style={S.inp} value={newEvent.date} onChange={e=>setNewEvent(n=>({...n,date:e.target.value}))}/></div>
+                <div><label style={S.lbl}>วันสิ้นสุด (ถ้ามี)</label><input type="date" style={S.inp} value={newEvent.endDate} onChange={e=>setNewEvent(n=>({...n,endDate:e.target.value}))}/></div>
+              </div>
+              <div><label style={S.lbl}>โน้ต</label><input style={S.inp} value={newEvent.note} onChange={e=>setNewEvent(n=>({...n,note:e.target.value}))} placeholder="รายละเอียดเพิ่มเติม..."/></div>
+              <button onClick={addEvent} style={{background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:"8px",fontSize:11,fontFamily:"'DM Sans', sans-serif",fontWeight:600,cursor:"pointer",letterSpacing:1}}>+ บันทึกกิจกรรม</button>
+            </div>
+          </div>
+        )}
+        {/* Show events this month */}
+        {(shopEvents||[]).filter(e=>{
+          const d=new Date(e.date);
+          return d.getMonth()===planMonth&&d.getFullYear()===planYear;
+        }).map(e=>{
+          const et=EVENT_TYPES.find(t=>t.key===e.type);
+          return(
+            <div key={e.id} style={{background:C.bg,border:`1px solid ${et?.color||C.accent}44`,borderLeft:`3px solid ${et?.color||C.accent}`,borderRadius:8,padding:"8px 12px",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+              <div>
+                <div style={{fontFamily:"'Inter', sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{et?.icon} {e.title||et?.label}</div>
+                <div style={{fontFamily:"'DM Sans', sans-serif",fontSize:10,color:C.muted,marginTop:2}}>{e.date}{e.endDate&&` → ${e.endDate}`}</div>
+                {e.note&&<div style={{fontFamily:"'DM Sans', sans-serif",fontSize:10,color:C.muted,marginTop:1}}>{e.note}</div>}
+              </div>
+              <button onClick={()=>delEvent(e.id)} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:12}}>✕</button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{fontFamily:"'DM Sans', sans-serif",fontSize:9,color:C.muted,letterSpacing:1,marginBottom:10}}>กำหนดแผนงานรายวัน — พนักงานเห็นใน Calendar</div>
       {days.map(wd=>{
         const dk=wd.toISOString().slice(0,10);
         const dayPlan=workPlans[dk]||{};
@@ -1313,6 +1400,7 @@ export default function App(){
   const [kpiLogs,setKpiLogs]=useState(()=>loadData("cit-kpi-logs",{}));
   const [workPlans,setWorkPlans]=useState(()=>loadData("cit-work-plans",{}));
   const [workSchedules,setWorkSchedules]=useState(()=>loadData("cit-work-schedules",[]));
+  const [shopEvents,setShopEvents]=useState(()=>loadData("cit-shop-events",[]));
   const [showAdd,setShowAdd]=useState(false);
   const [tab,setTab]=useState("orders");
   const [filterStatus,setFilterStatus]=useState("all");
@@ -1388,9 +1476,9 @@ export default function App(){
             {filtered.length===0&&<div style={{textAlign:"center",color:C.muted,padding:60,fontFamily:"'DM Sans', sans-serif",letterSpacing:4,fontSize:12}}>NO ORDERS</div>}
           </>
         )}
-        {tab==="calendar"&&<CalView orders={orders} workPlans={workPlans} workSchedules={workSchedules}/>}
+        {tab==="calendar"&&<CalView orders={orders} workPlans={workPlans} workSchedules={workSchedules} shopEvents={shopEvents}/>}
         {tab==="kpi"&&<KpiTracker isBoss={isBoss} workPlans={workPlans} orders={orders} setOrders={setOrders} writing={writing}/>}
-        {tab==="planner"&&isBoss&&<WorkPlanner workPlans={workPlans} setWorkPlans={setWorkPlans} workSchedules={workSchedules} setWorkSchedules={setWorkSchedules} orders={orders}/>}
+        {tab==="planner"&&isBoss&&<WorkPlanner workPlans={workPlans} setWorkPlans={setWorkPlans} workSchedules={workSchedules} setWorkSchedules={setWorkSchedules} orders={orders} shopEvents={shopEvents} setShopEvents={setShopEvents}/>}
         {tab==="finance"&&isBoss&&<FinanceView orders={orders}/>}
         {tab==="monthly"&&isBoss&&<MonthlySummary orders={orders} kpiLogs={kpiLogs} workPlans={workPlans}/>}
         {tab==="dashboard"&&isBoss&&<BossDashboard orders={orders} kpiLogs={kpiLogs} workPlans={workPlans}/>}
