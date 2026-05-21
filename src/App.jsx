@@ -1,4 +1,28 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCu10712mcFGxAqNbl98CeWfthHrA5Yds4",
+  authDomain: "customitthailand-90460.firebaseapp.com",
+  projectId: "customitthailand-90460",
+  storageBucket: "customitthailand-90460.firebasestorage.app",
+  messagingSenderId: "73861855144",
+  appId: "1:73861855144:web:115bbcc9fc8fad1c548f9d",
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+// Firestore sync helpers
+async function fsSet(docId, data) {
+  try { await setDoc(doc(db, "customit", docId), { data: JSON.stringify(data) }); } catch(e) { console.error("fsSet error", e); }
+}
+async function fsGet(docId, fallback) {
+  try { const d = await getDoc(doc(db, "customit", docId)); return d.exists() ? JSON.parse(d.data().data) : fallback; } catch(e) { return fallback; }
+}
+function fsListen(docId, cb) {
+  return onSnapshot(doc(db, "customit", docId), (d) => { if(d.exists()) cb(JSON.parse(d.data().data)); });
+}
 
 const BOSS_PASSWORD = "198742";
 const STATUSES = [
@@ -76,7 +100,7 @@ const SAMPLE_ORDERS = [
 ];
 
 function loadData(k,fb){ try{ const s=localStorage.getItem(k); return s?JSON.parse(s):fb; }catch{ return fb; } }
-function saveData(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} }
+function saveData(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} fsSet(k,v); }
 function daysLeft(d){ return Math.ceil((new Date(d)-new Date())/86400000); }
 function toDataURL(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); }); }
 function fmt(n){ return Number(n||0).toLocaleString("th-TH"); }
@@ -1029,6 +1053,14 @@ export default function App(){
   useEffect(()=>{ saveData("cit-orders-v3",orders); },[orders]);
   useEffect(()=>{ saveData("cit-kpi-logs",kpiLogs); },[kpiLogs]);
   useEffect(()=>{ saveData("cit-work-plans",workPlans); },[workPlans]);
+
+  // Firebase real-time sync
+  useEffect(()=>{
+    const u1=fsListen("cit-orders-v3",(d)=>{ setOrders(d); localStorage.setItem("cit-orders-v3",JSON.stringify(d)); });
+    const u2=fsListen("cit-kpi-logs",(d)=>{ setKpiLogs(d); localStorage.setItem("cit-kpi-logs",JSON.stringify(d)); });
+    const u3=fsListen("cit-work-plans",(d)=>{ setWorkPlans(d); localStorage.setItem("cit-work-plans",JSON.stringify(d)); });
+    return ()=>{ u1(); u2(); u3(); };
+  },[]);
   if(!role) return <LoginScreen onBoss={()=>setRole("boss")} onTeam={()=>setRole("team")}/>;
   const isBoss=role==="boss";
   const add=o=>setOrders(arr=>[o,...arr]);
