@@ -686,6 +686,9 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orde
     setWorkPlans(p=>{ const cur=p[dk]||{}; const updated=dayType?{...cur,[member]:dayType}:{...cur}; if(!dayType)delete updated[member]; return {...p,[dk]:updated}; });
   };
   const applyAll=(dk,dayType)=>{ TEAM.forEach(m=>set(dk,m,dayType)); };
+  // Selected day for detail panel
+  const [selDay,setSelDay]=useState(null); // "YYYY-MM-DD"
+
   return(
     <div>
       {/* Month navigation */}
