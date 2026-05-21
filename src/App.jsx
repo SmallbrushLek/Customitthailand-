@@ -45,6 +45,14 @@ const SHOE_TYPES = [
   "Puma Ultra","New Balance Furon","New Balance Tekela","Mizuno Morelia","Mizuno Rebula",
   "Asics DS Light","Under Armour Magnetico","Umbro Speciali","Diadora Brasil","อื่นๆ"
 ];
+const ORDER_TYPES = [
+  { key: "normal",    label: "ออเดอร์ปกติ",  icon: "💰", color: "#C9A96E" },
+  { key: "free",      label: "งานฟรี",        icon: "🎁", color: "#8BC7A7" },
+  { key: "event",     label: "งาน Event",     icon: "🎉", color: "#8BA7C7" },
+  { key: "promotion", label: "โปรโมชั่น",     icon: "📢", color: "#C7B98B" },
+  { key: "collab",    label: "Collab/Content", icon: "🤝", color: "#A78BC7" },
+];
+
 const PRODUCT_CATS = [
   { key: "paint",   label: "สีและอุปกรณ์ทาสี", icon: "🎨", color: "#C9A96E" },
   { key: "cloth",   label: "ถุงเท้า / เสื้อผ้า",  icon: "🧦", color: "#8BA7C7" },
@@ -94,7 +102,7 @@ function genQueueId(created, id) {
 }
 
 const SAMPLE_ORDERS = [
-  { id:1, customer:"คุณมิน", ig:"", platform:"instagram", model:"Nike Mercurial Superfly", size:"กลาง", deadline:"2026-05-28", priority:"urgent", assignee:"Otto", status:"inprogress", note:"ลาย Floral สีพาสเทล", created:Date.now()-86400000, images:[], designImages:[], price:2500, deposit:1000, depositPaid:true, fullPaid:false, cowork:false, coworkNote:"" },
+  { id:1, customer:"คุณมิน", ig:"", platform:"instagram", orderType:"normal", model:"Nike Mercurial Superfly", size:"กลาง", deadline:"2026-05-28", priority:"urgent", assignee:"Otto", status:"inprogress", note:"ลาย Floral สีพาสเทล", created:Date.now()-86400000, images:[], designImages:[], price:2500, deposit:1000, depositPaid:true, fullPaid:false, cowork:false, coworkNote:"" },
   { id:2, customer:"คุณบิ๊ก", ig:"@bigcustom", platform:"line", model:"Adidas Predator", size:"เล็ก", deadline:"2026-06-01", priority:"normal", assignee:"Otto", status:"queue", note:"โทนดำ-ทอง", created:Date.now()-43200000, images:[], designImages:[], price:1800, deposit:500, depositPaid:true, fullPaid:false, cowork:true, coworkNote:"Otto: วาด / Smallbrush: พ่น+เก็บงาน" },
   { id:3, customer:"คุณพลอย", ig:"@ploystyle", platform:"instagram", model:"Puma King", size:"ใหญ่", deadline:"2026-06-05", priority:"low", assignee:"Smallbrush", status:"done", note:"ลาย One Piece", created:Date.now()-172800000, images:[], designImages:[], price:3500, deposit:1500, depositPaid:true, fullPaid:true, cowork:false, coworkNote:"" },
 ];
@@ -198,8 +206,9 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
               <div>
                 <div style={{fontFamily:"'Cormorant Garamond', serif",fontWeight:600,fontSize:17,color:C.text,letterSpacing:0.5}}>{order.customer}</div>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginTop:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginTop:1,flexWrap:"wrap"}}>
                   {order.queueId&&<span style={{fontFamily:"'Barlow Condensed', sans-serif",fontSize:9,color:C.accent,letterSpacing:2,background:C.accent+"15",borderRadius:3,padding:"1px 6px"}}>{order.queueId}</span>}
+                  {order.orderType&&order.orderType!=="normal"&&(()=>{ const ot=ORDER_TYPES.find(o=>o.key===order.orderType); return ot?<span style={{fontFamily:"'Barlow Condensed', sans-serif",fontSize:9,color:ot.color,letterSpacing:1,background:ot.color+"15",borderRadius:3,padding:"1px 6px"}}>{ot.icon} {ot.label}</span>:null; })()}
                   {order.platform&&(()=>{ const pl=PLATFORMS.find(p=>p.key===order.platform); return pl?<span style={{fontFamily:"'Barlow Condensed', sans-serif",fontSize:9,color:pl.color,letterSpacing:1}}>{pl.icon} {pl.label}</span>:null; })()}
                 </div>
               </div>
@@ -339,10 +348,10 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
 }
 
 function AddModal({onClose,onAdd,nextId,isBoss}){
-  const blank={customer:"",ig:"",model:SHOE_TYPES[0],customModel:"",size:"กลาง",deadline:"",priority:"normal",assignee:TEAM[0],note:"",images:[],designImages:[],price:"",deposit:"",depositPaid:false,fullPaid:false,cowork:false,coworkNote:"",platform:""};
+  const blank={customer:"",ig:"",model:SHOE_TYPES[0],customModel:"",size:"กลาง",deadline:"",priority:"normal",assignee:TEAM[0],note:"",images:[],designImages:[],price:"",deposit:"",depositPaid:false,fullPaid:false,cowork:false,coworkNote:"",platform:"",orderType:"normal"};
   const [form,setForm]=useState(blank);
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
-  const ok=form.customer&&form.deadline;
+  const ok=!!(form.customer&&form.deadline);
   return(
     <div style={{position:"fixed",inset:0,background:"#000000d0",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200}} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`2px solid ${C.accent}`,borderRadius:"12px 12px 0 0",padding:20,width:"100%",maxWidth:480,maxHeight:"94vh",overflowY:"auto"}}>
@@ -383,12 +392,25 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
             </label>
             {form.cowork&&<textarea style={{...S.inp,resize:"vertical",minHeight:48,fontSize:12}} value={form.coworkNote} onChange={e=>set("coworkNote",e.target.value)} placeholder="Otto: วาด / Smallbrush: พ่น+เก็บงาน"/>}
           </div>
-          {isBoss&&<div style={{background:C.bg,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"10px 12px"}}>
+          <div>
+            <label style={S.lbl}>ประเภทงาน</label>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {ORDER_TYPES.map(ot=>(
+                <button key={ot.key} onClick={()=>set("orderType",ot.key)} style={{padding:"6px 10px",background:form.orderType===ot.key?ot.color+"22":"transparent",color:form.orderType===ot.key?ot.color:C.muted,border:`1px solid ${form.orderType===ot.key?ot.color+"55":C.border}`,borderRadius:6,fontFamily:"'Barlow Condensed', sans-serif",fontSize:10,letterSpacing:1,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+                  <span>{ot.icon}</span><span>{ot.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          {isBoss&&form.orderType==="normal"&&<div style={{background:C.bg,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"10px 12px"}}>
             <div style={S.sec(C.accent)}>Finance</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
               <div><label style={S.lbl}>ราคาเต็ม (฿)</label><input type="number" style={S.inp} value={form.price} onChange={e=>set("price",e.target.value)} placeholder="0"/></div>
               <div><label style={S.lbl}>มัดจำ (฿)</label><input type="number" style={S.inp} value={form.deposit} onChange={e=>set("deposit",e.target.value)} placeholder="0"/></div>
             </div>
+          </div>}
+          {isBoss&&form.orderType!=="normal"&&<div style={{background:C.bg,border:`1px solid ${C.ok}22`,borderRadius:8,padding:"10px 12px"}}>
+            <div style={{fontFamily:"'Barlow Condensed', sans-serif",fontSize:10,color:C.ok,letterSpacing:2}}>{ORDER_TYPES.find(o=>o.key===form.orderType)?.icon} {ORDER_TYPES.find(o=>o.key===form.orderType)?.label} — ไม่คิดค่าใช้จ่าย</div>
           </div>}
           <ImageUploader label="รูปรองเท้า" accent={C.accent} images={form.images} onChange={v=>set("images",v)}/>
           <ImageUploader label="ดีไซน์ Reference" accent="#8BA7C7" images={form.designImages} onChange={v=>set("designImages",v)}/>
