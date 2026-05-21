@@ -100,7 +100,7 @@ const SAMPLE_ORDERS = [
 ];
 
 function loadData(k,fb){ try{ const s=localStorage.getItem(k); return s?JSON.parse(s):fb; }catch{ return fb; } }
-function saveData(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} fsSet(k,v); }
+function saveData(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} }
 function daysLeft(d){ return Math.ceil((new Date(d)-new Date())/86400000); }
 function toDataURL(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); }); }
 function fmt(n){ return Number(n||0).toLocaleString("th-TH"); }
@@ -1050,17 +1050,46 @@ export default function App(){
   const [tab,setTab]=useState("orders");
   const [filterStatus,setFilterStatus]=useState("all");
   const [search,setSearch]=useState("");
-  useEffect(()=>{ saveData("cit-orders-v3",orders); },[orders]);
-  useEffect(()=>{ saveData("cit-kpi-logs",kpiLogs); },[kpiLogs]);
-  useEffect(()=>{ saveData("cit-work-plans",workPlans); },[workPlans]);
+  // Save to Firebase whenever data changes (debounced)
+  useEffect(()=>{ 
+    saveData("cit-orders-v3",orders);
+    const t=setTimeout(()=>fsSet("cit-orders-v3",orders),500);
+    return ()=>clearTimeout(t);
+  },[orders]);
+  useEffect(()=>{ 
+    saveData("cit-kpi-logs",kpiLogs);
+    const t=setTimeout(()=>fsSet("cit-kpi-logs",kpiLogs),500);
+    return ()=>clearTimeout(t);
+  },[kpiLogs]);
+  useEffect(()=>{ 
+    saveData("cit-work-plans",workPlans);
+    const t=setTimeout(()=>fsSet("cit-work-plans",workPlans),500);
+    return ()=>clearTimeout(t);
+  },[workPlans]);
 
-  // Firebase real-time sync
+  // Listen for changes from other devices
+  const [fsReady,setFsReady]=useState(false);
   useEffect(()=>{
-    const u1=fsListen("cit-orders-v3",(d)=>{ setOrders(d); localStorage.setItem("cit-orders-v3",JSON.stringify(d)); });
-    const u2=fsListen("cit-kpi-logs",(d)=>{ setKpiLogs(d); localStorage.setItem("cit-kpi-logs",JSON.stringify(d)); });
-    const u3=fsListen("cit-work-plans",(d)=>{ setWorkPlans(d); localStorage.setItem("cit-work-plans",JSON.stringify(d)); });
-    return ()=>{ u1(); u2(); u3(); };
+    // First load from Firebase
+    Promise.all([
+      fsGet("cit-orders-v3", null),
+      fsGet("cit-kpi-logs", null),
+      fsGet("cit-work-plans", null),
+    ]).then(([o,k,w])=>{
+      if(o&&Array.isArray(o)&&o.length>0) setOrders(o);
+      if(k&&Object.keys(k).length>0) setKpiLogs(k);
+      if(w&&Object.keys(w).length>0) setWorkPlans(w);
+      setFsReady(true);
+    });
   },[]);
+
+  useEffect(()=>{
+    if(!fsReady) return;
+    const u1=fsListen("cit-orders-v3",(d)=>{ if(Array.isArray(d)&&d.length>0){ setOrders(d); } });
+    const u2=fsListen("cit-kpi-logs",(d)=>{ if(d&&Object.keys(d).length>0){ setKpiLogs(d); } });
+    const u3=fsListen("cit-work-plans",(d)=>{ if(d&&Object.keys(d).length>0){ setWorkPlans(d); } });
+    return ()=>{ u1(); u2(); u3(); };
+  },[fsReady]);
   if(!role) return <LoginScreen onBoss={()=>setRole("boss")} onTeam={()=>setRole("team")}/>;
   const isBoss=role==="boss";
   const add=o=>setOrders(arr=>[o,...arr]);
