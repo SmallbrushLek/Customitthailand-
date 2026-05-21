@@ -20,8 +20,10 @@ async function initFirebase() {
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     return db;
-  } catch(e) { console.error("Firebase init failed", e); return null; }
+  } catch(e) { console.error("Firebase init failed, using localStorage only", e); return null; }
 }
+// Non-blocking firebase ops
+async function fsSetSafe(k,v){ try{ await fsSet(k,v); }catch(e){ console.warn("fsSet failed",e); } }
 
 // Firestore sync helpers - use dynamic imports
 async function fsSet(docId, data) {
