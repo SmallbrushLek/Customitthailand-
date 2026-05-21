@@ -652,7 +652,6 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orde
     return dates;
   }
 
-  function WorkPlanner_inner({workPlans,setWorkPlans}){
   const now=new Date();
   const ws=new Date(now); ws.setDate(now.getDate()-((now.getDay()+6)%7));
   const days=Array.from({length:14},(_,i)=>{ const d=new Date(ws); d.setDate(ws.getDate()+i); return d; });
