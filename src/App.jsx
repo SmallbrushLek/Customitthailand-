@@ -445,7 +445,7 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
   );
 }
 
-function CalView({orders,workPlans}){
+function CalView({orders,workPlans,workSchedules}){
   const now=new Date();
   const [month,setMonth]=useState(now.getMonth());
   const [year,setYear]=useState(now.getFullYear());
@@ -487,6 +487,21 @@ function CalView({orders,workPlans}){
                   </div>
                   {dayOrders.length>0&&<span style={{fontFamily:"'Barlow Condensed', sans-serif",fontSize:9,color:C.muted}}>📦 {dayOrders.length}</span>}
                 </div>
+                {/* Multi-day schedules */}
+                {(workSchedules||[]).filter(s=>{ const dates=[]; for(let i=0;i<s.days;i++){const d=new Date(s.startDate);d.setDate(d.getDate()+i);dates.push(d.toISOString().slice(0,10));}return dates.includes(dk); }).map((s,i)=>{
+                  const order=orders.find(o=>String(o.id)===String(s.orderId));
+                  const st2=order?STATUSES.find(st=>st.key===order.status):null;
+                  const isStart=dk===s.startDate;
+                  const endDate=new Date(s.startDate); endDate.setDate(endDate.getDate()+s.days-1);
+                  const isEnd=dk===endDate.toISOString().slice(0,10);
+                  return(
+                    <div key={"ws"+i} style={{background:st2?.color+"25"||C.accent+"25",border:`1px solid ${st2?.color||C.accent}55`,borderLeft:isStart?`3px solid ${st2?.color||C.accent}`:"none",borderRight:isEnd?`1px solid ${st2?.color||C.accent}55`:"none",borderRadius:isStart?"4px 0 0 4px":isEnd?"0 4px 4px 0":"0",padding:"4px 8px",marginBottom:4,display:"flex",alignItems:"center",gap:6}}>
+                      <span style={{fontFamily:"'Cormorant Garamond', serif",fontSize:12,color:st2?.color||C.accent,fontWeight:600}}>{isStart?"▶ ":""}{order?.customer||"?"}</span>
+                      <span style={{fontFamily:"'Barlow Condensed', sans-serif",fontSize:9,color:C.muted}}>{s.assignee}</span>
+                      {isStart&&<span style={{fontFamily:"'Barlow Condensed', sans-serif",fontSize:8,color:C.muted,marginLeft:"auto"}}>{s.days}วัน</span>}
+                    </div>
+                  );
+                })}
                 {Object.keys(dayPlan).length===0
                   ?null
                   :TEAM.filter(m=>dayPlan[m]).map(m=>{
@@ -524,6 +539,14 @@ function CalView({orders,workPlans}){
                       {day&&<div style={{fontSize:8,color:isToday?C.accent:C.muted,fontFamily:"'Barlow Condensed', sans-serif"}}>{day}</div>}
                       {ords.map((o,i)=>{ const st=STATUSES.find(s=>s.key===o.status); return <div key={"o"+i} style={{fontSize:6,background:st.color+"22",color:st.color,border:`1px solid ${st.color}33`,borderRadius:2,padding:"1px 2px",marginTop:1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",fontFamily:"'Barlow Condensed', sans-serif"}}>{o.customer}</div>; })}
                       {planTypes.map((pt,i)=>{ const dt=DAY_TYPES.find(d=>d.key===pt); return dt?<div key={"p"+i} style={{fontSize:5,background:dt.color+"15",color:dt.color,borderRadius:2,padding:"1px 2px",marginTop:1,border:`1px solid ${dt.color}25`,fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:0.5}}>{dt.short}</div>:null; })}
+                      {(workSchedules||[]).filter(s=>{ const dates=[]; for(let i=0;i<s.days;i++){const d=new Date(s.startDate);d.setDate(d.getDate()+i);dates.push(d.toISOString().slice(0,10));} return dk&&dates.includes(dk); }).map((s,i)=>{
+                        const order=orders.find(o=>String(o.id)===String(s.orderId));
+                        const st2=order?STATUSES.find(st=>st.key===order.status):null;
+                        const isStart=dk===s.startDate;
+                        const endDate=new Date(s.startDate); endDate.setDate(endDate.getDate()+s.days-1);
+                        const isEnd=dk===endDate.toISOString().slice(0,10);
+                        return <div key={"ws"+i} style={{fontSize:5,background:st2?.color||C.accent,color:"#000",borderRadius:isStart?"3px 0 0 3px":isEnd?"0 3px 3px 0":"0",padding:"2px 2px",marginTop:1,overflow:"hidden",whiteSpace:"nowrap",fontFamily:"'Barlow Condensed', sans-serif",fontWeight:800,opacity:0.85}}>{isStart?(order?.customer||"?"):""}</div>;
+                      })}
                     </div>
                   );
                 })}
@@ -546,7 +569,29 @@ function CalView({orders,workPlans}){
   );
 }
 
-function WorkPlanner({workPlans,setWorkPlans}){
+function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orders}){
+  const [showAddSchedule,setShowAddSchedule]=useState(false);
+  const [newSched,setNewSched]=useState({orderId:"",startDate:todayKey(),days:1,assignee:TEAM[0]});
+
+  const addSchedule=()=>{
+    if(!newSched.orderId||!newSched.startDate) return;
+    setWorkSchedules(s=>[...s,{id:Date.now(),...newSched,days:Number(newSched.days)||1}]);
+    setShowAddSchedule(false);
+    setNewSched({orderId:"",startDate:todayKey(),days:1,assignee:TEAM[0]});
+  };
+  const delSchedule=id=>setWorkSchedules(s=>s.filter(x=>x.id!==id));
+
+  // Get dates covered by a schedule
+  function schedDates(s){
+    const dates=[];
+    for(let i=0;i<s.days;i++){
+      const d=new Date(s.startDate); d.setDate(d.getDate()+i);
+      dates.push(d.toISOString().slice(0,10));
+    }
+    return dates;
+  }
+
+  function WorkPlanner_inner({workPlans,setWorkPlans}){
   const now=new Date();
   const ws=new Date(now); ws.setDate(now.getDate()-((now.getDay()+6)%7));
   const days=Array.from({length:14},(_,i)=>{ const d=new Date(ws); d.setDate(ws.getDate()+i); return d; });
@@ -1089,6 +1134,7 @@ export default function App(){
   const [orders,setOrders]=useState(()=>loadData("cit-orders-v3",SAMPLE_ORDERS));
   const [kpiLogs,setKpiLogs]=useState(()=>loadData("cit-kpi-logs",{}));
   const [workPlans,setWorkPlans]=useState(()=>loadData("cit-work-plans",{}));
+  const [workSchedules,setWorkSchedules]=useState(()=>loadData("cit-work-schedules",[]));
   const [showAdd,setShowAdd]=useState(false);
   const [tab,setTab]=useState("orders");
   const [filterStatus,setFilterStatus]=useState("all");
@@ -1101,7 +1147,8 @@ export default function App(){
     const u1=fsListen("cit-orders-v3",(d)=>{ if(!writing.current){ setOrders(d); localStorage.setItem("cit-orders-v3",JSON.stringify(d)); } });
     const u2=fsListen("cit-kpi-logs",(d)=>{ if(!writing.current){ setKpiLogs(d); localStorage.setItem("cit-kpi-logs",JSON.stringify(d)); } });
     const u3=fsListen("cit-work-plans",(d)=>{ if(!writing.current){ setWorkPlans(d); localStorage.setItem("cit-work-plans",JSON.stringify(d)); } });
-    return ()=>{ u1(); u2(); u3(); };
+    const u4=fsListen("cit-work-schedules",(d)=>{ if(!writing.current&&Array.isArray(d)){ setWorkSchedules(d); localStorage.setItem("cit-work-schedules",JSON.stringify(d)); } });
+    return ()=>{ u1(); u2(); u3(); u4(); };
   },[]);
   if(!role) return <LoginScreen onBoss={()=>setRole("boss")} onTeam={()=>setRole("team")}/>;
   const isBoss=role==="boss";
@@ -1163,9 +1210,9 @@ export default function App(){
             {filtered.length===0&&<div style={{textAlign:"center",color:C.muted,padding:60,fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:4,fontSize:12}}>NO ORDERS</div>}
           </>
         )}
-        {tab==="calendar"&&<CalView orders={orders} workPlans={workPlans}/>}
+        {tab==="calendar"&&<CalView orders={orders} workPlans={workPlans} workSchedules={workSchedules}/>}
         {tab==="kpi"&&<KpiTracker isBoss={isBoss} workPlans={workPlans}/>}
-        {tab==="planner"&&isBoss&&<WorkPlanner workPlans={workPlans} setWorkPlans={setWorkPlans}/>}
+        {tab==="planner"&&isBoss&&<WorkPlanner workPlans={workPlans} setWorkPlans={setWorkPlans} workSchedules={workSchedules} setWorkSchedules={setWorkSchedules} orders={orders}/>}
         {tab==="finance"&&isBoss&&<FinanceView orders={orders}/>}
         {tab==="monthly"&&isBoss&&<MonthlySummary orders={orders} kpiLogs={kpiLogs} workPlans={workPlans}/>}
         {tab==="dashboard"&&isBoss&&<BossDashboard orders={orders} kpiLogs={kpiLogs} workPlans={workPlans}/>}
