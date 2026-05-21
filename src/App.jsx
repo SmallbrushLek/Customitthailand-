@@ -606,8 +606,11 @@ function CalView({orders,workPlans,workSchedules}){
           {orders.filter(o=>o.status!=="done").sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).slice(0,5).map(o=>{
             const st=STATUSES.find(s=>s.key===o.status); const dl=daysLeft(o.deadline);
             return <div key={o.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:C.surface,borderRadius:8,marginBottom:5,borderLeft:`2px solid ${st.color}`}}>
-              <div><span style={{fontFamily:"'Inter', sans-serif",fontWeight:600,fontSize:14,color:C.text}}>{o.customer}</span><span style={{fontSize:10,color:C.muted,marginLeft:8,fontFamily:"'DM Sans', sans-serif"}}>{o.model}</span></div>
-              <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div><span style={{fontFamily:"'Inter', sans-serif",fontWeight:600,fontSize:14,color:C.text}}>{o.customer}</span><span style={{fontSize:10,color:C.muted,marginLeft:6,fontFamily:"'DM Sans', sans-serif"}}>{o.model}</span></div>
+                <div style={{marginTop:5}}><MiniProgress progress={o.status==="done"?100:(o.progress??0)}/></div>
+              </div>
+              <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
                 <a href={calUrl(o)} target="_blank" rel="noreferrer" style={{fontSize:8,color:C.muted,textDecoration:"none",fontFamily:"'DM Sans', sans-serif",background:C.bg,border:`1px solid ${C.border}`,borderRadius:3,padding:"2px 6px"}}>+CAL</a>
                 <span style={{fontFamily:"'DM Sans', sans-serif",fontSize:10,color:dl<0?C.danger:dl<=2?"#C7B98B":C.muted}}>{dl<0?"OVERDUE":`${dl}d`}</span>
               </div>
