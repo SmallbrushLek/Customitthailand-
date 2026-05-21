@@ -1050,51 +1050,21 @@ export default function App(){
   const [tab,setTab]=useState("orders");
   const [filterStatus,setFilterStatus]=useState("all");
   const [search,setSearch]=useState("");
-  // Save to Firebase whenever data changes (debounced)
-  useEffect(()=>{ 
-    saveData("cit-orders-v3",orders);
-    const t=setTimeout(()=>fsSet("cit-orders-v3",orders),500);
-    return ()=>clearTimeout(t);
-  },[orders]);
-  useEffect(()=>{ 
-    saveData("cit-kpi-logs",kpiLogs);
-    const t=setTimeout(()=>fsSet("cit-kpi-logs",kpiLogs),500);
-    return ()=>clearTimeout(t);
-  },[kpiLogs]);
-  useEffect(()=>{ 
-    saveData("cit-work-plans",workPlans);
-    const t=setTimeout(()=>fsSet("cit-work-plans",workPlans),500);
-    return ()=>clearTimeout(t);
-  },[workPlans]);
+  // Track if we're currently writing to Firebase (to avoid echo)
+  const writing = useRef(false);
 
-  // Listen for changes from other devices
-  const [fsReady,setFsReady]=useState(false);
+  // On mount: listen to Firebase as single source of truth
   useEffect(()=>{
-    // First load from Firebase
-    Promise.all([
-      fsGet("cit-orders-v3", null),
-      fsGet("cit-kpi-logs", null),
-      fsGet("cit-work-plans", null),
-    ]).then(([o,k,w])=>{
-      if(o&&Array.isArray(o)&&o.length>0) setOrders(o);
-      if(k&&Object.keys(k).length>0) setKpiLogs(k);
-      if(w&&Object.keys(w).length>0) setWorkPlans(w);
-      setFsReady(true);
-    });
-  },[]);
-
-  useEffect(()=>{
-    if(!fsReady) return;
-    const u1=fsListen("cit-orders-v3",(d)=>{ if(Array.isArray(d)&&d.length>0){ setOrders(d); } });
-    const u2=fsListen("cit-kpi-logs",(d)=>{ if(d&&Object.keys(d).length>0){ setKpiLogs(d); } });
-    const u3=fsListen("cit-work-plans",(d)=>{ if(d&&Object.keys(d).length>0){ setWorkPlans(d); } });
+    const u1=fsListen("cit-orders-v3",(d)=>{ if(!writing.current){ setOrders(d); localStorage.setItem("cit-orders-v3",JSON.stringify(d)); } });
+    const u2=fsListen("cit-kpi-logs",(d)=>{ if(!writing.current){ setKpiLogs(d); localStorage.setItem("cit-kpi-logs",JSON.stringify(d)); } });
+    const u3=fsListen("cit-work-plans",(d)=>{ if(!writing.current){ setWorkPlans(d); localStorage.setItem("cit-work-plans",JSON.stringify(d)); } });
     return ()=>{ u1(); u2(); u3(); };
-  },[fsReady]);
+  },[]);
   if(!role) return <LoginScreen onBoss={()=>setRole("boss")} onTeam={()=>setRole("team")}/>;
   const isBoss=role==="boss";
-  const add=o=>setOrders(arr=>[o,...arr]);
-  const upd=o=>setOrders(arr=>arr.map(x=>x.id===o.id?o:x));
-  const del=id=>setOrders(arr=>arr.filter(x=>x.id!==id));
+  const add=o=>{ const next=[o,...orders]; writing.current=true; fsSet("cit-orders-v3",next).then(()=>{ writing.current=false; }); setOrders(next); localStorage.setItem("cit-orders-v3",JSON.stringify(next)); };
+  const upd=o=>{ const next=orders.map(x=>x.id===o.id?o:x); writing.current=true; fsSet("cit-orders-v3",next).then(()=>{ writing.current=false; }); setOrders(next); localStorage.setItem("cit-orders-v3",JSON.stringify(next)); };
+  const del=id=>{ const next=orders.filter(x=>x.id!==id); writing.current=true; fsSet("cit-orders-v3",next).then(()=>{ writing.current=false; }); setOrders(next); localStorage.setItem("cit-orders-v3",JSON.stringify(next)); };
   const nextId=Math.max(0,...orders.map(o=>o.id))+1;
   const filtered=orders.filter(o=>filterStatus==="all"||o.status===filterStatus).filter(o=>!search||o.customer.includes(search)||o.model.toLowerCase().includes(search.toLowerCase())||(o.ig||"").includes(search)).sort((a,b)=>{ const p={urgent:0,normal:1,low:2}; return p[a.priority]!==p[b.priority]?p[a.priority]-p[b.priority]:new Date(a.deadline)-new Date(b.deadline); });
   const counts=Object.fromEntries(STATUSES.map(s=>[s.key,orders.filter(o=>o.status===s.key).length]));
