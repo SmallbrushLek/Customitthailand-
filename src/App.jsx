@@ -111,6 +111,17 @@ function loadData(k,fb){ try{ const s=localStorage.getItem(k); return s?JSON.par
 function saveData(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} }
 function daysLeft(d){ return Math.ceil((new Date(d)-new Date())/86400000); }
 function toDataURL(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); }); }
+async function uploadToCloudinary(file){
+  const formData=new FormData();
+  formData.append("file",file);
+  formData.append("upload_preset","customit_upload");
+  formData.append("cloud_name","dfe6ubwzf");
+  try{
+    const res=await fetch("https://api.cloudinary.com/v1_1/dfe6ubwzf/image/upload",{method:"POST",body:formData});
+    const data=await res.json();
+    return data.secure_url;
+  }catch(e){ console.error("Upload failed",e); return null; }
+}
 function fmt(n){ return Number(n||0).toLocaleString("th-TH"); }
 function todayKey(){ return new Date().toISOString().slice(0,10); }
 function monthKey(y,m){ return `${y}-${String(m+1).padStart(2,"0")}`; }
@@ -160,13 +171,23 @@ function Divider(){ return <div style={{height:1,background:C.border,margin:"12p
 
 function ImageUploader({images,onChange,label,accent}){
   const ref=useRef();
-  const drop=useCallback(async(files)=>{ const news=await Promise.all([...files].filter(f=>f.type.startsWith("image/")).map(toDataURL)); onChange([...(images||[]),...news]); },[images,onChange]);
+  const [uploading,setUploading]=useState(false);
+  const drop=useCallback(async(files)=>{
+    const imgFiles=[...files].filter(f=>f.type.startsWith("image/"));
+    if(imgFiles.length===0)return;
+    setUploading(true);
+    const urls=await Promise.all(imgFiles.map(uploadToCloudinary));
+    const valid=urls.filter(Boolean);
+    onChange([...(images||[]),...valid]);
+    setUploading(false);
+  },[images,onChange]);
   return(
     <div>
       <div style={{...S.lbl,color:accent||C.muted}}>{label}</div>
       <div onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();drop(e.dataTransfer.files);}} onClick={()=>ref.current.click()}
         style={{border:`1px dashed ${C.border}`,borderRadius:6,padding:8,cursor:"pointer",minHeight:52,display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",background:C.bg}}>
-        {(!images||images.length===0)&&<span style={{color:C.muted,fontSize:11,fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:1}}>DROP / TAP TO UPLOAD</span>}
+        {uploading&&<span style={{color:C.accent,fontSize:11,fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:1}}>⏳ กำลังอัปโหลด...</span>}
+      {!uploading&&(!images||images.length===0)&&<span style={{color:C.muted,fontSize:11,fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:1}}>DROP / TAP TO UPLOAD</span>}
         {(images||[]).map((src,i)=>(
           <div key={i} style={{position:"relative"}}>
             <img src={src} alt="" style={{width:52,height:52,objectFit:"cover",borderRadius:4,border:`1px solid ${C.border}`}}/>
