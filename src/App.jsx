@@ -37,7 +37,9 @@ const PRIORITIES = [
   { key: "low",    label: "LOW",    color: "#555" },
 ];
 const TEAM = ["Otto", "Smallbrush"];
-const SHOE_SIZES = ["เล็ก", "กลาง", "ใหญ่"];
+const SHOE_SIZES = ["เล็ก", "กลาง", "ใหญ่", "กำหนดเอง"];
+// Days needed per size for 100% completion
+const SIZE_DAYS = { "เล็ก": 1, "กลาง": 1, "ใหญ่": 4, "กำหนดเอง": null };
 const SHOE_TYPES = [
   "Nike Mercurial Superfly","Nike Mercurial Vapor","Nike Phantom GX","Nike Phantom GT",
   "Nike Tiempo Legend","Nike Premier","Adidas Predator","Adidas X Speedportal",
@@ -236,6 +238,7 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
               <div style={{textAlign:"right",flexShrink:0,marginLeft:8}}>
                 <Pill color={st.color}>{st.label}</Pill>
                 <div style={{fontSize:10,marginTop:3,color:isOverdue?C.danger:isNear?"#C7B98B":C.muted,fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:1}}>{isOverdue?`OVERDUE ${Math.abs(dl)}d`:`${dl}d`}</div>
+                {(order.progress>0)&&<div style={{marginTop:3,height:3,background:C.border,borderRadius:2,width:60,overflow:"hidden"}}><div style={{height:"100%",width:`${order.progress}%`,background:order.progress>=100?C.ok:C.accent,borderRadius:2}}/></div>}
               </div>
             </div>
             <div style={{marginTop:5,display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
@@ -302,6 +305,35 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
               </div>
             </div>
             {order.note&&<div style={{marginBottom:10,padding:"8px 10px",background:C.bg,borderRadius:6,borderLeft:`2px solid ${C.border}`}}><div style={{fontSize:9,letterSpacing:2,color:C.muted,fontFamily:"'Barlow Condensed', sans-serif",marginBottom:2}}>NOTE</div><div style={{fontSize:13,color:C.muted,fontFamily:"'Cormorant Garamond', serif"}}>{order.note}</div></div>}
+
+            {/* Progress bar */}
+            <div style={{marginBottom:12,background:C.bg,borderRadius:8,padding:"10px 12px",border:`1px solid ${C.border}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <div>
+                  <div style={S.lbl}>ความคืบหน้า</div>
+                  {order.estimatedDays&&<div style={{fontSize:9,color:C.muted,fontFamily:"'Barlow Condensed', sans-serif"}}>ประมาณ {order.estimatedDays} วัน · {order.size}</div>}
+                </div>
+                <div style={{fontFamily:"'Cormorant Garamond', serif",fontWeight:700,fontSize:22,color:order.progress>=100?C.ok:C.accent}}>{Math.round(order.progress||0)}%</div>
+              </div>
+              {/* Drag slider */}
+              <div style={{position:"relative",height:32,display:"flex",alignItems:"center"}}>
+                <div style={{position:"absolute",width:"100%",height:8,background:C.border,borderRadius:4,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${order.progress||0}%`,background:order.progress>=100?C.ok:C.accent,borderRadius:4,transition:"width 0.2s"}}/>
+                </div>
+                <input type="range" min="0" max="100" step="5" value={order.progress||0}
+                  onChange={e=>onUpdate({...order,progress:Number(e.target.value)})}
+                  style={{position:"absolute",width:"100%",opacity:0,cursor:"pointer",height:32}}/>
+                <div style={{position:"absolute",left:`calc(${order.progress||0}% - 10px)`,width:20,height:20,background:order.progress>=100?C.ok:C.accent,borderRadius:"50%",border:`2px solid ${C.bg}`,boxShadow:"0 2px 6px #0006",pointerEvents:"none",transition:"left 0.2s"}}/>
+              </div>
+              {/* KPI reference */}
+              {order.estimatedDays&&(
+                <div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {[{label:"1 วัน",pct:Math.round(100/order.estimatedDays)},{label:"แบ่งครึ่ง",pct:50},{label:"เสร็จ",pct:100}].map(({label,pct})=>(
+                    <button key={pct} onClick={()=>onUpdate({...order,progress:pct})} style={{fontSize:9,color:C.muted,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,padding:"2px 8px",cursor:"pointer",fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:1}}>{label} ({pct}%)</button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Divider/>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
               {order.status!=="queue"&&<button onClick={prevSt} style={{flex:1,minWidth:60,background:C.bg,color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,padding:"7px",fontSize:11,cursor:"pointer",fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:1}}>← BACK</button>}
@@ -369,7 +401,7 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
 }
 
 function AddModal({onClose,onAdd,nextId,isBoss}){
-  const blank={customer:"",ig:"",model:SHOE_TYPES[0],customModel:"",size:"กลาง",deadline:"",priority:"normal",assignee:TEAM[0],note:"",images:[],designImages:[],price:"",deposit:"",depositPaid:false,fullPaid:false,cowork:false,coworkNote:"",platform:"",orderType:"normal"};
+  const blank={customer:"",ig:"",model:SHOE_TYPES[0],customModel:"",size:"กลาง",estimatedDays:"",deadline:"",priority:"normal",assignee:TEAM[0],note:"",images:[],designImages:[],price:"",deposit:"",depositPaid:false,fullPaid:false,cowork:false,coworkNote:"",platform:"",orderType:"normal",progress:0};
   const [form,setForm]=useState(blank);
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   const ok=!!(form.customer&&form.deadline);
@@ -400,6 +432,9 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
             </div>
             <div><label style={S.lbl}>ขนาด</label><select style={S.inp} value={form.size} onChange={e=>set("size",e.target.value)}>{SHOE_SIZES.map(t=><option key={t}>{t}</option>)}</select></div>
           </div>
+          {form.size==="กำหนดเอง"&&(
+            <div><label style={S.lbl}>จำนวนวันที่ใช้ทำ (วัน)</label><input type="number" min="1" style={S.inp} value={form.estimatedDays} onChange={e=>set("estimatedDays",e.target.value)} placeholder="เช่น 7 วัน"/></div>
+          )}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
             <div><label style={S.lbl}>Deadline *</label><input type="date" style={S.inp} value={form.deadline} onChange={e=>set("deadline",e.target.value)}/></div>
             <div><label style={S.lbl}>Priority</label><select style={S.inp} value={form.priority} onChange={e=>set("priority",e.target.value)}>{PRIORITIES.map(p=><option key={p.key} value={p.key}>{p.label}</option>)}</select></div>
@@ -436,7 +471,7 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
           <ImageUploader label="รูปรองเท้า" accent={C.accent} images={form.images} onChange={v=>set("images",v)}/>
           <ImageUploader label="ดีไซน์ Reference" accent="#8BA7C7" images={form.designImages} onChange={v=>set("designImages",v)}/>
         </div>
-        <button onClick={()=>{ if(ok){ const finalModel=form.model==="อื่นๆ"&&form.customModel?form.customModel:form.model; const created=Date.now(); onAdd({...form,model:finalModel,id:nextId,queueId:genQueueId(created,nextId),price:Number(form.price)||0,deposit:Number(form.deposit)||0,status:"queue",created}); onClose(); } }}
+        <button onClick={()=>{ if(ok){ const finalModel=form.model==="อื่นๆ"&&form.customModel?form.customModel:form.model; const created=Date.now(); const estDays=form.size==="กำหนดเอง"?Number(form.estimatedDays)||1:SIZE_DAYS[form.size]||1; onAdd({...form,model:finalModel,id:nextId,queueId:genQueueId(created,nextId),price:Number(form.price)||0,deposit:Number(form.deposit)||0,status:"queue",created,estimatedDays:estDays,progress:0}); onClose(); } }}
           style={{marginTop:16,width:"100%",background:ok?C.accent:"#1a1a1a",color:ok?C.bg:"#333",border:"none",borderRadius:8,padding:12,fontSize:13,fontFamily:"'Barlow Condensed', sans-serif",fontWeight:700,letterSpacing:3,cursor:ok?"pointer":"default",transition:"all 0.2s"}}>
           ADD TO QUEUE
         </button>
@@ -639,7 +674,7 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orde
   );
 }
 
-function KpiTracker({isBoss,workPlans}){
+function KpiTracker({isBoss,workPlans,orders}){
   const [logs,setLogs]=useState(()=>loadData("cit-kpi-logs",{}));
   const [selDate,setSelDate]=useState(todayKey());
   const [selMember,setSelMember]=useState(TEAM[0]);
@@ -647,11 +682,16 @@ function KpiTracker({isBoss,workPlans}){
   const assignedDayType=workPlans?.[selDate]?.[selMember]||null;
   const key=`${selDate}__${selMember}`;
   const entry=logs[key]||{ dayType:assignedDayType||"production", production:{}, content:{}, design:{}, note:"", bossComment:"" };
-  const setEntry=u=>setLogs(l=>({...l,[key]:u}));
+  const setEntry=u=>{
+    const next={...logs,[key]:u};
+    setLogs(next);
+    saveData("cit-kpi-logs",next);
+    fsSet("cit-kpi-logs",next);
+  };
   const setField=(sec,fld,val)=>setEntry({...entry,[sec]:{...(entry[sec]||{}),[fld]:Number(val)||0}});
   const dt=assignedDayType||entry.dayType;
   const passed=kpiPass({...entry,dayType:dt});
-  const teamSummary=isBoss?TEAM.map(m=>{ const e=logs[`${selDate}__${m}`]; const assigned=workPlans?.[selDate]?.[m]||null; if(!e&&!assigned)return{m,logged:false,assigned:null}; const eff=assigned||e?.dayType; return{m,logged:!!e,ok:e?kpiPass({...e,dayType:eff}):false,dayType:eff,assigned}; }):[];
+  const teamSummary=isBoss?TEAM.map(m=>{ const e=logs[`${selDate}__${m}`]; const assigned=workPlans?.[selDate]?.[m]||null; if(!e&&!assigned)return{m,logged:false,assigned:null}; const eff=assigned||e?.dayType; const linkedOrders=(e?.linkedOrders||[]).map(id=>orders?.find(o=>String(o.id)===String(id))).filter(Boolean); return{m,logged:!!e,ok:e?kpiPass({...e,dayType:eff}):false,dayType:eff,assigned,linkedOrders}; }):[];
   const dtObj=DAY_TYPES.find(d=>d.key===dt);
 
   // Production KPI: show which SIZE threshold applies + footage always
@@ -685,6 +725,7 @@ function KpiTracker({isBoss,workPlans}){
                   <div style={{fontFamily:"'Cormorant Garamond', serif",fontWeight:600,fontSize:13,color:C.text,marginBottom:3}}>{m}</div>
                   {dtc&&<div style={{fontSize:8,color:dtc.color,fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:1,marginBottom:3}}>{dtc.short}</div>}
                   {logged?<div style={{fontSize:13}}>{ok?"✓":"✗"}<span style={{fontSize:9,color:ok?C.ok:C.danger,fontFamily:"'Barlow Condensed', sans-serif",marginLeft:2}}>{ok?"PASS":"MISS"}</span></div>:<div style={{fontSize:9,color:C.muted,fontFamily:"'Barlow Condensed', sans-serif"}}>{assigned?"—":"NO PLAN"}</div>}
+                  {logged&&teamSummary.find(x=>x.m===m)?.linkedOrders?.length>0&&<div style={{fontSize:7,color:C.accent,fontFamily:"'Barlow Condensed', sans-serif",marginTop:2,letterSpacing:0.5}}>{teamSummary.find(x=>x.m===m).linkedOrders.map(o=>o.customer).join(", ")}</div>}
                 </div>
               );
             })}
@@ -710,6 +751,28 @@ function KpiTracker({isBoss,workPlans}){
 
         {dt==="production"&&(
           <>
+            {/* Order linking for Production Day */}
+            <div style={{background:C.bg,border:`1px solid ${C.accent}33`,borderRadius:8,padding:"10px 12px",marginBottom:12}}>
+              <div style={S.sec(C.accent)}>ออเดอร์ที่ทำวันนี้</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {orders.filter(o=>o.status!=="done").map(o=>{
+                  const linked=(entry.linkedOrders||[]).includes(String(o.id));
+                  const st2=STATUSES.find(s=>s.key===o.status);
+                  return(
+                    <button key={o.id} onClick={()=>{
+                      const cur=entry.linkedOrders||[];
+                      const next=linked?cur.filter(x=>x!==String(o.id)):[...cur,String(o.id)];
+                      setEntry({...entry,linkedOrders:next});
+                    }} style={{padding:"5px 10px",background:linked?st2?.color+"25":"transparent",color:linked?st2?.color:C.muted,border:`1px solid ${linked?st2?.color+"55":C.border}`,borderRadius:6,fontFamily:"'Barlow Condensed', sans-serif",fontSize:10,letterSpacing:0.5,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",gap:4}}>
+                      {linked&&<span>✓</span>}
+                      <span>{o.customer}</span>
+                      <span style={{fontSize:8,opacity:0.7}}>{o.model?.split(" ").slice(0,2).join(" ")}</span>
+                    </button>
+                  );
+                })}
+                {orders.filter(o=>o.status!=="done").length===0&&<span style={{fontSize:11,color:C.muted,fontFamily:"'Barlow Condensed', sans-serif"}}>ไม่มีออเดอร์ที่กำลังทำ</span>}
+              </div>
+            </div>
             <div style={{background:C.bg,borderRadius:6,padding:"8px 10px",marginBottom:12,border:`1px solid ${C.border}`}}>
               <div style={{fontSize:9,color:C.muted,fontFamily:"'Barlow Condensed', sans-serif",letterSpacing:1,marginBottom:2}}>ต้องทำอย่างใดอย่างหนึ่ง</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
@@ -1211,7 +1274,7 @@ export default function App(){
           </>
         )}
         {tab==="calendar"&&<CalView orders={orders} workPlans={workPlans} workSchedules={workSchedules}/>}
-        {tab==="kpi"&&<KpiTracker isBoss={isBoss} workPlans={workPlans}/>}
+        {tab==="kpi"&&<KpiTracker isBoss={isBoss} workPlans={workPlans} orders={orders}/>}
         {tab==="planner"&&isBoss&&<WorkPlanner workPlans={workPlans} setWorkPlans={setWorkPlans} workSchedules={workSchedules} setWorkSchedules={setWorkSchedules} orders={orders}/>}
         {tab==="finance"&&isBoss&&<FinanceView orders={orders}/>}
         {tab==="monthly"&&isBoss&&<MonthlySummary orders={orders} kpiLogs={kpiLogs} workPlans={workPlans}/>}
