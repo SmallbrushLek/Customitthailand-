@@ -691,7 +691,7 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orde
   );
 }
 
-function KpiTracker({isBoss,workPlans,orders}){
+function KpiTracker({isBoss,workPlans,orders,setOrders,writing}){
   const [logs,setLogs]=useState(()=>loadData("cit-kpi-logs",{}));
   const [selDate,setSelDate]=useState(todayKey());
   const [selMember,setSelMember]=useState(TEAM[0]);
@@ -776,15 +776,53 @@ function KpiTracker({isBoss,workPlans,orders}){
                   const linked=(entry.linkedOrders||[]).includes(String(o.id));
                   const st2=STATUSES.find(s=>s.key===o.status);
                   return(
-                    <button key={o.id} onClick={()=>{
-                      const cur=entry.linkedOrders||[];
-                      const next=linked?cur.filter(x=>x!==String(o.id)):[...cur,String(o.id)];
-                      setEntry({...entry,linkedOrders:next});
-                    }} style={{padding:"5px 10px",background:linked?st2?.color+"25":"transparent",color:linked?st2?.color:C.muted,border:`1px solid ${linked?st2?.color+"55":C.border}`,borderRadius:6,fontFamily:"'DM Sans', sans-serif",fontSize:10,letterSpacing:0.5,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",gap:4}}>
-                      {linked&&<span>✓</span>}
-                      <span>{o.customer}</span>
-                      <span style={{fontSize:8,opacity:0.7}}>{o.model?.split(" ").slice(0,2).join(" ")}</span>
-                    </button>
+                    <div key={o.id} style={{width:"100%"}}>
+                      <button onClick={()=>{
+                        const cur=entry.linkedOrders||[];
+                        const next=linked?cur.filter(x=>x!==String(o.id)):[...cur,String(o.id)];
+                        setEntry({...entry,linkedOrders:next});
+                      }} style={{padding:"5px 10px",background:linked?st2?.color+"25":"transparent",color:linked?st2?.color:C.muted,border:`1px solid ${linked?st2?.color+"55":C.border}`,borderRadius:6,fontFamily:"'DM Sans', sans-serif",fontSize:10,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",gap:4,width:"100%"}}>
+                        {linked&&<span>✓</span>}
+                        <span style={{fontWeight:600}}>{o.customer}</span>
+                        <span style={{fontSize:9,opacity:0.6,marginLeft:2}}>{o.model?.split(" ").slice(0,2).join(" ")}</span>
+                      </button>
+                      {linked&&(
+                        <div style={{padding:"8px 10px",background:C.surface,borderRadius:"0 0 6px 6px",border:`1px solid ${st2?.color+"33"}`,borderTop:"none",marginTop:-1}}>
+                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                            <span style={{fontFamily:"'DM Sans', sans-serif",fontSize:10,color:C.muted}}>Progress ชิ้นงานนี้</span>
+                            <span style={{fontFamily:"'DM Sans', sans-serif",fontSize:10,color:st2?.color,fontWeight:700}}>{Math.round(o.progress||0)}%</span>
+                          </div>
+                          <div style={{position:"relative",height:28,display:"flex",alignItems:"center"}}>
+                            <div style={{position:"absolute",width:"100%",height:6,background:C.border,borderRadius:3,overflow:"hidden"}}>
+                              <div style={{height:"100%",width:`${o.progress||0}%`,background:st2?.color,borderRadius:3,transition:"width 0.2s"}}/>
+                            </div>
+                            <input type="range" min="0" max="100" step="5" value={o.progress||0}
+                              onChange={e=>{
+                                const updated={...o,progress:Number(e.target.value)};
+                                const next=orders.map(x=>x.id===o.id?updated:x);
+                                writing.current=true;
+                                fsSet("cit-orders-v3",next).then(()=>{writing.current=false;});
+                                setOrders(next);
+                                localStorage.setItem("cit-orders-v3",JSON.stringify(next));
+                              }}
+                              style={{position:"absolute",width:"100%",opacity:0,cursor:"pointer",height:28}}/>
+                            <div style={{position:"absolute",left:`calc(${o.progress||0}% - 8px)`,width:16,height:16,background:st2?.color,borderRadius:"50%",border:`2px solid ${C.bg}`,pointerEvents:"none",transition:"left 0.2s"}}/>
+                          </div>
+                          <div style={{display:"flex",gap:4,marginTop:4,flexWrap:"wrap"}}>
+                            {[0,25,50,75,100].map(p=>(
+                              <button key={p} onClick={()=>{
+                                const updated={...o,progress:p};
+                                const next=orders.map(x=>x.id===o.id?updated:x);
+                                writing.current=true;
+                                fsSet("cit-orders-v3",next).then(()=>{writing.current=false;});
+                                setOrders(next);
+                                localStorage.setItem("cit-orders-v3",JSON.stringify(next));
+                              }} style={{fontSize:9,color:o.progress===p?st2?.color:C.muted,background:o.progress===p?st2?.color+"20":"transparent",border:`1px solid ${o.progress===p?st2?.color+"55":C.border}`,borderRadius:4,padding:"2px 7px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif",fontWeight:600}}>{p}%</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
                 {orders.filter(o=>o.status!=="done").length===0&&<span style={{fontSize:11,color:C.muted,fontFamily:"'DM Sans', sans-serif"}}>ไม่มีออเดอร์ที่กำลังทำ</span>}
@@ -822,6 +860,66 @@ function KpiTracker({isBoss,workPlans,orders}){
 
         {dt==="depend"&&(
           <div>
+            {/* Order linking for Depend Day */}
+            <div style={{background:C.bg,border:`1px solid #A78BC733`,borderRadius:8,padding:"10px 12px",marginBottom:12}}>
+              <div style={{...S.sec("#A78BC7"),marginBottom:8}}>ออเดอร์ที่เกี่ยวข้องวันนี้</div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {orders.filter(o=>o.status!=="done").map(o=>{
+                  const linked=(entry.linkedOrders||[]).includes(String(o.id));
+                  const st2=STATUSES.find(s=>s.key===o.status);
+                  return(
+                    <div key={o.id}>
+                      <button onClick={()=>{
+                        const cur=entry.linkedOrders||[];
+                        const next=linked?cur.filter(x=>x!==String(o.id)):[...cur,String(o.id)];
+                        setEntry({...entry,linkedOrders:next});
+                      }} style={{padding:"5px 10px",background:linked?"#A78BC725":"transparent",color:linked?"#A78BC7":C.muted,border:`1px solid ${linked?"#A78BC755":C.border}`,borderRadius:6,fontFamily:"'DM Sans', sans-serif",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",gap:4,width:"100%"}}>
+                        {linked&&<span>✓</span>}
+                        <span style={{fontWeight:600}}>{o.customer}</span>
+                        <span style={{fontSize:9,opacity:0.6,marginLeft:2}}>{o.model?.split(" ").slice(0,2).join(" ")}</span>
+                      </button>
+                      {linked&&(
+                        <div style={{padding:"8px 10px",background:C.surface,borderRadius:"0 0 6px 6px",border:"1px solid #A78BC733",borderTop:"none",marginTop:-1}}>
+                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                            <span style={{fontFamily:"'DM Sans', sans-serif",fontSize:10,color:C.muted}}>Progress ชิ้นงานนี้</span>
+                            <span style={{fontFamily:"'DM Sans', sans-serif",fontSize:10,color:"#A78BC7",fontWeight:700}}>{Math.round(o.progress||0)}%</span>
+                          </div>
+                          <div style={{position:"relative",height:28,display:"flex",alignItems:"center"}}>
+                            <div style={{position:"absolute",width:"100%",height:6,background:C.border,borderRadius:3,overflow:"hidden"}}>
+                              <div style={{height:"100%",width:`${o.progress||0}%`,background:"#A78BC7",borderRadius:3,transition:"width 0.2s"}}/>
+                            </div>
+                            <input type="range" min="0" max="100" step="5" value={o.progress||0}
+                              onChange={e=>{
+                                const updated={...o,progress:Number(e.target.value)};
+                                const next=orders.map(x=>x.id===o.id?updated:x);
+                                writing.current=true;
+                                fsSet("cit-orders-v3",next).then(()=>{writing.current=false;});
+                                setOrders(next);
+                                localStorage.setItem("cit-orders-v3",JSON.stringify(next));
+                              }}
+                              style={{position:"absolute",width:"100%",opacity:0,cursor:"pointer",height:28}}/>
+                            <div style={{position:"absolute",left:`calc(${o.progress||0}% - 8px)`,width:16,height:16,background:"#A78BC7",borderRadius:"50%",border:`2px solid ${C.bg}`,pointerEvents:"none",transition:"left 0.2s"}}/>
+                          </div>
+                          <div style={{display:"flex",gap:4,marginTop:4,flexWrap:"wrap"}}>
+                            {[0,25,50,75,100].map(p=>(
+                              <button key={p} onClick={()=>{
+                                const updated={...o,progress:p};
+                                const next=orders.map(x=>x.id===o.id?updated:x);
+                                writing.current=true;
+                                fsSet("cit-orders-v3",next).then(()=>{writing.current=false;});
+                                setOrders(next);
+                                localStorage.setItem("cit-orders-v3",JSON.stringify(next));
+                              }} style={{fontSize:9,color:o.progress===p?"#A78BC7":C.muted,background:o.progress===p?"#A78BC720":"transparent",border:`1px solid ${o.progress===p?"#A78BC755":C.border}`,borderRadius:4,padding:"2px 7px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif",fontWeight:600}}>{p}%</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {orders.filter(o=>o.status!=="done").length===0&&<span style={{fontSize:11,color:C.muted,fontFamily:"'DM Sans', sans-serif"}}>ไม่มีออเดอร์ที่กำลังทำ</span>}
+              </div>
+            </div>
             <div style={{marginBottom:12}}>
               <label style={S.lbl}>งานที่มอบหมายวันนี้</label>
               <textarea style={{...S.inp,resize:"vertical",minHeight:100}} value={entry.dependTasks||""} onChange={e=>setEntry({...entry,dependTasks:e.target.value})} placeholder={"เช่น\n- ถ่ายรูปชิ้นงาน 3 คู่\n- เตรียม packaging\n- ส่งงานลูกค้า 2 ออเดอร์"}/>
@@ -1291,7 +1389,7 @@ export default function App(){
           </>
         )}
         {tab==="calendar"&&<CalView orders={orders} workPlans={workPlans} workSchedules={workSchedules}/>}
-        {tab==="kpi"&&<KpiTracker isBoss={isBoss} workPlans={workPlans} orders={orders}/>}
+        {tab==="kpi"&&<KpiTracker isBoss={isBoss} workPlans={workPlans} orders={orders} setOrders={setOrders} writing={writing}/>}
         {tab==="planner"&&isBoss&&<WorkPlanner workPlans={workPlans} setWorkPlans={setWorkPlans} workSchedules={workSchedules} setWorkSchedules={setWorkSchedules} orders={orders}/>}
         {tab==="finance"&&isBoss&&<FinanceView orders={orders}/>}
         {tab==="monthly"&&isBoss&&<MonthlySummary orders={orders} kpiLogs={kpiLogs} workPlans={workPlans}/>}
