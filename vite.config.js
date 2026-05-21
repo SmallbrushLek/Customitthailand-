@@ -5,10 +5,5 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['firebase/app', 'firebase/firestore']
-  },
-  build: {
-    rollupOptions: {
-      external: []
-    }
   }
 })
