@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "firebase/firestore";
+// Firebase loaded via CDN in index.html
 
 const firebaseConfig = {
   apiKey: "AIzaSyCu10712mcFGxAqNbl98CeWfthHrA5Yds4",
@@ -10,18 +9,45 @@ const firebaseConfig = {
   messagingSenderId: "73861855144",
   appId: "1:73861855144:web:115bbcc9fc8fad1c548f9d",
 };
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
+// Firebase will be initialized after CDN loads
+let db = null;
+function getDB() { return db; }
+async function initFirebase() {
+  if(db) return db;
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    return db;
+  } catch(e) { console.error("Firebase init failed", e); return null; }
+}
 
-// Firestore sync helpers
+// Firestore sync helpers - use dynamic imports
 async function fsSet(docId, data) {
-  try { await setDoc(doc(db, "customit", docId), { data: JSON.stringify(data) }); } catch(e) { console.error("fsSet error", e); }
+  try {
+    const db2 = await initFirebase();
+    if(!db2) return;
+    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await setDoc(doc(db2, "customit", docId), { data: JSON.stringify(data) });
+  } catch(e) { console.error("fsSet error", e); }
 }
 async function fsGet(docId, fallback) {
-  try { const d = await getDoc(doc(db, "customit", docId)); return d.exists() ? JSON.parse(d.data().data) : fallback; } catch(e) { return fallback; }
+  try {
+    const db2 = await initFirebase();
+    if(!db2) return fallback;
+    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const d = await getDoc(doc(db2, "customit", docId));
+    return d.exists() ? JSON.parse(d.data().data) : fallback;
+  } catch(e) { return fallback; }
 }
-function fsListen(docId, cb) {
-  return onSnapshot(doc(db, "customit", docId), (d) => { if(d.exists()) cb(JSON.parse(d.data().data)); });
+async function fsListen(docId, cb) {
+  try {
+    const db2 = await initFirebase();
+    if(!db2) return ()=>{};
+    const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    return onSnapshot(doc(db2, "customit", docId), (d) => { if(d.exists()) cb(JSON.parse(d.data().data)); });
+  } catch(e) { return ()=>{}; }
 }
 
 const BOSS_PASSWORD = "198742";
