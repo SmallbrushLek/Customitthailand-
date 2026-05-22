@@ -1,47 +1,38 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-// Firebase via CDN - no npm import needed
-let _db = null;
-async function getDB() {
-  if (_db) return _db;
-  try {
-    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
-    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    const cfg = {
-      apiKey: "AIzaSyCu10712mcFGxAqNbl98CeWfthHrA5Yds4",
-      authDomain: "customitthailand-90460.firebaseapp.com",
-      projectId: "customitthailand-90460",
-      storageBucket: "customitthailand-90460.firebasestorage.app",
-      messagingSenderId: "73861855144",
-      appId: "1:73861855144:web:115bbcc9fc8fad1c548f9d",
-    };
-    const app = getApps().length ? getApps()[0] : initializeApp(cfg);
-    _db = getFirestore(app);
-    return _db;
-  } catch(e) { console.warn("Firebase unavailable:", e); return null; }
-}
+// Firebase REST API - no SDK needed, works on all browsers
+const FB_PROJECT = "customitthailand-90460";
+const FB_BASE = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/customit`;
 
-// Firestore sync helpers - CDN based
+// Firebase REST API helpers
 async function fsSet(docId, data) {
   try {
-    const db = await getDB(); if(!db) return;
-    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await setDoc(doc(db, "customit", docId), { data: JSON.stringify(data) });
+    await fetch(`${FB_BASE}/${docId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fields: { data: { stringValue: JSON.stringify(data) } } })
+    });
   } catch(e) { console.warn("fsSet error", e); }
 }
 async function fsGet(docId, fallback) {
   try {
-    const db = await getDB(); if(!db) return fallback;
-    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    const d = await getDoc(doc(db, "customit", docId));
-    return d.exists() ? JSON.parse(d.data().data) : fallback;
+    const r = await fetch(`${FB_BASE}/${docId}`);
+    if(!r.ok) return fallback;
+    const d = await r.json();
+    return d.fields?.data?.stringValue ? JSON.parse(d.fields.data.stringValue) : fallback;
   } catch(e) { return fallback; }
 }
-async function fsListen(docId, cb) {
-  try {
-    const db = await getDB(); if(!db) return ()=>{};
-    const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    return onSnapshot(doc(db, "customit", docId), (d) => { if(d.exists()) { try { cb(JSON.parse(d.data().data)); } catch(e){} } });
-  } catch(e) { return ()=>{}; }
+// Poll-based sync (REST API doesn't support realtime, poll every 5s)
+const _polls = {};
+function fsListen(docId, cb) {
+  if(_polls[docId]) clearInterval(_polls[docId]);
+  // Fetch immediately
+  fsGet(docId, null).then(d=>{ if(d!==null) cb(d); });
+  // Then poll every 5 seconds
+  _polls[docId] = setInterval(async()=>{
+    const d = await fsGet(docId, null);
+    if(d !== null) cb(d);
+  }, 5000);
+  return ()=>{ clearInterval(_polls[docId]); delete _polls[docId]; };
 }
 
 const BOSS_PASSWORD = "198742";
