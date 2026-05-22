@@ -559,13 +559,43 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,shop
                 <button onClick={()=>applyAll(selDay,null)} style={{fontSize:9,background:C.surface,color:C.muted,border:`1px solid ${C.border}`,borderRadius:4,padding:"3px 7px",cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>CLR</button>
               </div>
             </div>
-            {TEAM.map(m=>{ const cur=dp[m]; return(
-              <div key={m} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:C.muted,minWidth:90}}>{m}</span>
-                <div style={{display:"flex",gap:4,flex:1}}>
-                  {DAY_TYPES.map(dt=><button key={dt.key} onClick={()=>set(selDay,m,cur===dt.key?null:dt.key)} style={{flex:1,padding:"6px 2px",background:cur===dt.key?dt.color+"25":"transparent",color:cur===dt.key?dt.color:C.muted,border:`1px solid ${cur===dt.key?dt.color+"60":C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:10,cursor:"pointer"}}>{dt.short}</button>)}
-                  {cur&&<button onClick={()=>set(selDay,m,null)} style={{padding:"6px 8px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,fontSize:10,cursor:"pointer"}}>✕</button>}
+            {TEAM.map(m=>{ const cur=dp[m]; 
+              // Get assigned orders for this member on this day
+              const planKey=`${selDay}__${m}`;
+              const dayLog={}; // Will be read from kpiLogs if passed
+              const assignedOrders=(orders||[]).filter(o=>o.status!=="done");
+              return(
+              <div key={m} style={{marginBottom:10}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:C.muted,minWidth:90}}>{m}</span>
+                  <div style={{display:"flex",gap:4,flex:1}}>
+                    {DAY_TYPES.map(dt=><button key={dt.key} onClick={()=>set(selDay,m,cur===dt.key?null:dt.key)} style={{flex:1,padding:"6px 2px",background:cur===dt.key?dt.color+"25":"transparent",color:cur===dt.key?dt.color:C.muted,border:`1px solid ${cur===dt.key?dt.color+"60":C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:10,cursor:"pointer"}}>{dt.short}</button>)}
+                    {cur&&<button onClick={()=>set(selDay,m,null)} style={{padding:"6px 8px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,fontSize:10,cursor:"pointer"}}>✕</button>}
+                  </div>
                 </div>
+                {/* Order assignment for PROD/DEPEND days */}
+                {(cur==="production"||cur==="depend")&&(
+                  <div style={{marginLeft:90,marginTop:4}}>
+                    <div style={{fontSize:8,color:C.muted,fontFamily:"'DM Mono',monospace",letterSpacing:1,marginBottom:4}}>ออเดอร์ที่ทำวันนี้</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                      {assignedOrders.map(o=>{
+                        const assignKey=`planAssign_${selDay}_${m}`;
+                        const assigned=((workPlans[selDay]||{})[`${m}_orders`]||[]).includes(String(o.id));
+                        const st2=STATUSES.find(s=>s.key===o.status);
+                        return(
+                          <button key={o.id} onClick={()=>{
+                            const cur2=((workPlans[selDay]||{})[`${m}_orders`]||[]);
+                            const next=assigned?cur2.filter(x=>x!==String(o.id)):[...cur2,String(o.id)];
+                            setWorkPlans(p=>{ const updated={...p,[selDay]:{...(p[selDay]||{}),[`${m}_orders`]:next}}; save("cit-work-plans",updated); fsSet("cit-work-plans",updated); return updated; });
+                          }} style={{padding:"3px 8px",background:assigned?st2?.color+"25":"transparent",color:assigned?st2?.color:C.muted,border:`1px solid ${assigned?st2?.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Mono',monospace",fontSize:9,cursor:"pointer",display:"flex",alignItems:"center",gap:3}}>
+                            {assigned&&<span style={{fontSize:8}}>✓</span>}
+                            <span>{o.customer}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             ); })}
             {dayEvs.length>0&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.border}`}}>{dayEvs.map(e=>{ const et=EVENT_TYPES.find(t=>t.key===e.type); return <div key={e.id} style={{fontSize:11,color:et?.color,fontFamily:"'DM Mono',monospace",marginBottom:2}}>{et?.icon} {e.title||et?.label}</div>; })}</div>}
@@ -643,7 +673,16 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
   const dt=assignedDT||entry.dayType;
   const passed=kpiPass({...entry,dayType:dt});
   const dtObj=DAY_TYPES.find(d=>d.key===dt);
-  const teamSum=isBoss?TEAM.map(m=>{ const e=logs[`${selDate}__${m}`]; const asgn=workPlans?.[selDate]?.[m]||null; const linked=(e?.linkedOrders||[]).map(id=>orders?.find(o=>String(o.id)===String(id))).filter(Boolean); return{m,logged:!!e,ok:e?kpiPass({...e,dayType:asgn||e.dayType}):false,dayType:asgn||e?.dayType,linked}; }):[];
+  const teamSum=isBoss?TEAM.map(m=>{ 
+    const e=logs[`${selDate}__${m}`]; 
+    const asgn=workPlans?.[selDate]?.[m]||null; 
+    // Get linked orders from both KPI log and Planner assignment
+    const kpiLinked=(e?.linkedOrders||[]).map(id=>orders?.find(o=>String(o.id)===String(id))).filter(Boolean);
+    const planLinked=((workPlans?.[selDate]||{})[`${m}_orders`]||[]).map(id=>orders?.find(o=>String(o.id)===String(id))).filter(Boolean);
+    // Merge and deduplicate
+    const allLinked=[...kpiLinked,...planLinked.filter(o=>!kpiLinked.find(k=>k.id===o.id))];
+    return{m,logged:!!e,ok:e?kpiPass({...e,dayType:asgn||e.dayType}):false,dayType:asgn||e?.dayType,linked:allLinked}; 
+  }):[];
   const prodSizeOk=(entry.production?.small||0)>=KPI.production.small||(entry.production?.medium||0)>=KPI.production.medium||(entry.production?.large||0)>=KPI.production.large;
   const footageOk=(entry.production?.footage||0)>=KPI.production.footage;
   const updateOrderProgress=(orderId,progress)=>{ const next=orders.map(o=>String(o.id)===String(orderId)?{...o,progress}:o); setOrders(next); save("cit-orders-v3",next); fsSet("cit-orders-v3",next); };
@@ -658,7 +697,19 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
                 <div style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,color:C.text,marginBottom:2}}>{m}</div>
                 {dtc&&<div style={{fontSize:8,color:dtc.color,fontFamily:"'DM Mono',monospace",marginBottom:2}}>{dtc.short}</div>}
                 {logged?<div style={{fontSize:11,color:ok?C.ok:C.danger}}>{ok?"✓ PASS":"✗ MISS"}</div>:<div style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace"}}>ยังไม่กรอก</div>}
-                {linked?.length>0&&<div style={{fontSize:7,color:C.accent,marginTop:2,fontFamily:"'DM Mono',monospace"}}>{linked.map(o=>o.customer).join(", ")}</div>}
+                {linked?.length>0&&(
+                  <div style={{marginTop:4,width:"100%"}}>
+                    {linked.map(o=>{ const st2=STATUSES.find(s=>s.key===o.status); return(
+                      <div key={o.id} style={{marginTop:3}}>
+                        <div style={{fontSize:7,color:C.muted,fontFamily:"'DM Mono',monospace",marginBottom:1,textAlign:"left"}}>{o.customer}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:4}}>
+                          <div style={{flex:1,height:2,background:C.border,borderRadius:1}}><div style={{height:"100%",width:`${o.progress||0}%`,background:st2?.color||C.accent,borderRadius:1}}/></div>
+                          <span style={{fontSize:7,color:st2?.color,fontFamily:"'DM Mono',monospace",minWidth:20}}>{Math.round(o.progress||0)}%</span>
+                        </div>
+                      </div>
+                    ); })}
+                  </div>
+                )}
               </div>
             ); })}
           </div>
