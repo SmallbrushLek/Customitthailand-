@@ -442,17 +442,48 @@ function CalView({orders,workPlans,workSchedules,shopEvents,kpiLogs,isBoss}){
               </div>
             ))}
           </div>
-          {upcoming.map(o=>{ const st=STATUSES.find(s=>s.key===o.status); const dl=daysLeft(o.deadline); return(
-            <div key={o.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:C.surface,borderRadius:8,marginBottom:5,borderLeft:`2px solid ${st.color}`}}>
-              <div style={{flex:1,minWidth:0}}>
-                <div><span style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{o.customer}</span><span style={{fontSize:10,color:C.muted,marginLeft:6,fontFamily:"'DM Mono',monospace"}}>{o.model}</span></div>
-                <div style={{marginTop:4}}><MiniProgress progress={o.status==="done"?100:(o.progress||0)}/></div>
-              </div>
-              <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0,marginLeft:8}}>
-                <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:dl<0?C.danger:dl<=2?"#C7B98B":C.muted}}>{dl<0?"OVERDUE":`${dl}d`}</span>
-              </div>
-            </div>
-          ); })}
+          {(()=>{
+            // Sort ALL non-done orders by deadline
+            const sorted=orders
+              .filter(o=>o.deadline)
+              .sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+            if(sorted.length===0) return <div style={{color:C.muted,fontSize:11,fontFamily:"'DM Mono',monospace",textAlign:"center",padding:20}}>ไม่มีออเดอร์</div>;
+            let lastMonth="";
+            return sorted.map(o=>{
+              const st=STATUSES.find(s=>s.key===o.status);
+              const dl=daysLeft(o.deadline);
+              const oMonth=o.deadline?.slice(0,7);
+              const [oY,oM]=oMonth.split("-").map(Number);
+              const monthLabel=`${MONTHS_TH[oM-1]} ${oY}`;
+              const showDivider=oMonth!==lastMonth;
+              lastMonth=oMonth;
+              return(
+                <div key={o.id}>
+                  {showDivider&&(
+                    <div style={{display:"flex",alignItems:"center",gap:8,margin:"12px 0 8px"}}>
+                      <div style={{flex:1,height:1,background:C.border}}/>
+                      <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:C.accent,letterSpacing:2,background:C.bg,padding:"0 8px"}}>{monthLabel}</span>
+                      <div style={{flex:1,height:1,background:C.border}}/>
+                    </div>
+                  )}
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:C.surface,borderRadius:8,marginBottom:5,borderLeft:`2px solid ${st.color}`}}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                        <span style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:14,color:C.text}}>{o.customer}</span>
+                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:st.color,background:st.color+"18",borderRadius:3,padding:"1px 6px"}}>{st.label}</span>
+                      </div>
+                      <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:C.muted,marginBottom:4}}>{o.model}</div>
+                      <MiniProgress progress={o.status==="done"?100:(o.progress||0)}/>
+                    </div>
+                    <div style={{flexShrink:0,marginLeft:10,textAlign:"right"}}>
+                      <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:dl<0?C.danger:dl<=2?"#f59e0b":C.muted}}>{dl<0?"OVERDUE":`${dl}d`}</div>
+                      <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:C.muted,marginTop:2}}>{o.deadline?.slice(5)}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            });
+          })()}
         </>
       )}
     </div>
