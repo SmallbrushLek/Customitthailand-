@@ -1,27 +1,47 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "firebase/firestore";
+// Firebase via CDN - no npm import needed
+let _db = null;
+async function getDB() {
+  if (_db) return _db;
+  try {
+    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const cfg = {
+      apiKey: "AIzaSyCu10712mcFGxAqNbl98CeWfthHrA5Yds4",
+      authDomain: "customitthailand-90460.firebaseapp.com",
+      projectId: "customitthailand-90460",
+      storageBucket: "customitthailand-90460.firebasestorage.app",
+      messagingSenderId: "73861855144",
+      appId: "1:73861855144:web:115bbcc9fc8fad1c548f9d",
+    };
+    const app = getApps().length ? getApps()[0] : initializeApp(cfg);
+    _db = getFirestore(app);
+    return _db;
+  } catch(e) { console.warn("Firebase unavailable:", e); return null; }
+}
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCu10712mcFGxAqNbl98CeWfthHrA5Yds4",
-  authDomain: "customitthailand-90460.firebaseapp.com",
-  projectId: "customitthailand-90460",
-  storageBucket: "customitthailand-90460.firebasestorage.app",
-  messagingSenderId: "73861855144",
-  appId: "1:73861855144:web:115bbcc9fc8fad1c548f9d",
-};
-const firebaseApp = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
-
-// Firestore sync helpers
+// Firestore sync helpers - CDN based
 async function fsSet(docId, data) {
-  try { await setDoc(doc(db, "customit", docId), { data: JSON.stringify(data) }); } catch(e) { console.error("fsSet error", e); }
+  try {
+    const db = await getDB(); if(!db) return;
+    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await setDoc(doc(db, "customit", docId), { data: JSON.stringify(data) });
+  } catch(e) { console.warn("fsSet error", e); }
 }
 async function fsGet(docId, fallback) {
-  try { const d = await getDoc(doc(db, "customit", docId)); return d.exists() ? JSON.parse(d.data().data) : fallback; } catch(e) { return fallback; }
+  try {
+    const db = await getDB(); if(!db) return fallback;
+    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const d = await getDoc(doc(db, "customit", docId));
+    return d.exists() ? JSON.parse(d.data().data) : fallback;
+  } catch(e) { return fallback; }
 }
-function fsListen(docId, cb) {
-  try { return onSnapshot(doc(db, "customit", docId), (d) => { if(d.exists()) cb(JSON.parse(d.data().data)); }); } catch(e) { return ()=>{}; }
+async function fsListen(docId, cb) {
+  try {
+    const db = await getDB(); if(!db) return ()=>{};
+    const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    return onSnapshot(doc(db, "customit", docId), (d) => { if(d.exists()) { try { cb(JSON.parse(d.data().data)); } catch(e){} } });
+  } catch(e) { return ()=>{}; }
 }
 
 const BOSS_PASSWORD = "198742";
