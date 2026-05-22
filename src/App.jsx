@@ -6,10 +6,10 @@ const TEAM = ["Otto", "Smallbrush"];
 const MONTHS_TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
 const DAY_TH = ["อา","จ","อ","พ","พฤ","ศ","ส"];
 const STATUSES = [
-  {key:"queue",      label:"QUEUE",       color:"#C9A96E"},
-  {key:"inprogress", label:"IN PROGRESS", color:"#8BA7C7"},
-  {key:"review",     label:"REVIEW",      color:"#C7B98B"},
-  {key:"done",       label:"DONE",        color:"#8BC7A7"},
+  {key:"queue",      label:"QUEUE",       color:"#f59e0b"},
+  {key:"inprogress", label:"IN PROGRESS", color:"#7c3aed"},
+  {key:"review",     label:"REVIEW",      color:"#06b6d4"},
+  {key:"done",       label:"DONE",        color:"#00ff88"},
 ];
 const PRIORITIES = [
   {key:"urgent", label:"URGENT", color:"#C97A7A"},
@@ -114,19 +114,19 @@ async function uploadToCloudinary(file){
 
 // ── DESIGN ────────────────────────────────────────────
 const C={
-  bg:"#0e0e0e", surface:"#161616", border:"#2a2a2a",
-  text:"#e8e0d0", muted:"#6a6560",
-  accent:"#C9A96E", danger:"#C97A7A", ok:"#8BC7A7",
+  bg:"#111318", surface:"#1a1d24", border:"#252830",
+  text:"#f0eee8", muted:"#555a66",
+  accent:"#7c3aed", accent2:"#f59e0b", danger:"#ef4444", ok:"#00ff88",
 };
 const S={
-  inp:{background:C.surface,color:C.text,border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",fontSize:13,width:"100%",boxSizing:"border-box",fontFamily:"'Inter',sans-serif",outline:"none"},
-  lbl:{fontSize:10,letterSpacing:1,color:C.muted,fontFamily:"'DM Sans',sans-serif",fontWeight:600,display:"block",marginBottom:5,textTransform:"uppercase"},
-  card:{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:14,marginBottom:12},
+  inp:{background:"#0e1014",color:C.text,border:`1px solid ${C.border}`,borderRadius:8,padding:"8px 12px",fontSize:13,width:"100%",boxSizing:"border-box",fontFamily:"'DM Mono',monospace",outline:"none"},
+  lbl:{fontSize:9,letterSpacing:2,color:C.muted,fontFamily:"'DM Mono',monospace",fontWeight:500,display:"block",marginBottom:5,textTransform:"uppercase"},
+  card:{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14,marginBottom:12},
 };
-const FONTS = `https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Sarabun:wght@400;600&display=swap`;
+const FONTS = `https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=Sarabun:wght@400;600&display=swap`;
 
 function Pill({color,children}){
-  return <span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:9,letterSpacing:1,color,background:color+"18",borderRadius:3,padding:"2px 8px",border:`1px solid ${color}30`}}>{children}</span>;
+  return <span style={{fontFamily:"'DM Mono',monospace",fontWeight:500,fontSize:8,letterSpacing:1,color,background:color+"18",borderRadius:4,padding:"2px 8px",border:`1px solid ${color}35`}}>{children}</span>;
 }
 function MiniBar({pct,color}){
   return <div style={{height:3,background:C.border,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,pct||0)}%`,background:color||C.accent,borderRadius:2,transition:"width 0.3s"}}/></div>;
@@ -138,7 +138,7 @@ function MiniProgress({progress}){
       <div style={{flex:1,height:3,background:C.border,borderRadius:2,overflow:"hidden"}}>
         <div style={{height:"100%",width:`${Math.min(100,progress||0)}%`,background:color,borderRadius:2}}/>
       </div>
-      <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color,fontWeight:600,minWidth:28}}>{Math.round(progress||0)}%</span>
+      <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,color,fontWeight:600,minWidth:28}}>{Math.round(progress||0)}%</span>
     </div>
   );
 }
@@ -157,8 +157,8 @@ function ImageUploader({images,onChange,label}){
     <div>
       <label style={S.lbl}>{label}</label>
       <div onClick={()=>ref.current.click()} style={{border:`1px dashed ${C.border}`,borderRadius:6,padding:8,cursor:"pointer",minHeight:48,display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",background:C.bg}}>
-        {loading&&<span style={{color:C.accent,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>⏳ กำลังอัปโหลด...</span>}
-        {!loading&&(!images||images.length===0)&&<span style={{color:C.muted,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>TAP TO UPLOAD</span>}
+        {loading&&<span style={{color:C.accent,fontSize:11,fontFamily:"'DM Mono',monospace"}}>⏳ กำลังอัปโหลด...</span>}
+        {!loading&&(!images||images.length===0)&&<span style={{color:C.muted,fontSize:11,fontFamily:"'DM Mono',monospace"}}>TAP TO UPLOAD</span>}
         {(images||[]).map((src,i)=>(
           <div key={i} style={{position:"relative"}}>
             <img src={src} alt="" style={{width:52,height:52,objectFit:"cover",borderRadius:4}}/>
@@ -191,20 +191,20 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
         <div style={{flex:1,minWidth:0}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
-              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:16,color:C.text}}>{order.customer}</div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:16,color:C.text}}>{order.customer}</div>
               <div style={{display:"flex",gap:5,alignItems:"center",marginTop:3,flexWrap:"wrap"}}>
-                {order.queueId&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:C.accent,background:C.accent+"15",borderRadius:3,padding:"1px 6px"}}>{order.queueId}</span>}
-                {pl&&<span style={{fontSize:9,color:pl.color,fontFamily:"'DM Sans',sans-serif"}}>{pl.icon} {pl.label}</span>}
-                {ot&&ot.key!=="normal"&&<span style={{fontSize:9,color:ot.color,fontFamily:"'DM Sans',sans-serif"}}>{ot.icon} {ot.label}</span>}
+                {order.queueId&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:C.accent,background:C.accent+"15",borderRadius:3,padding:"1px 6px"}}>{order.queueId}</span>}
+                {pl&&<span style={{fontSize:9,color:pl.color,fontFamily:"'DM Mono',monospace"}}>{pl.icon} {pl.label}</span>}
+                {ot&&ot.key!=="normal"&&<span style={{fontSize:9,color:ot.color,fontFamily:"'DM Mono',monospace"}}>{ot.icon} {ot.label}</span>}
               </div>
             </div>
             <div style={{textAlign:"right",flexShrink:0,marginLeft:8}}>
               <Pill color={st.color}>{st.label}</Pill>
-              <div style={{fontSize:10,marginTop:3,color:dl<0?C.danger:dl<=2?"#C7B98B":C.muted,fontFamily:"'DM Sans',sans-serif"}}>{dl<0?`OVERDUE ${Math.abs(dl)}d`:`${dl}d`}</div>
+              <div style={{fontSize:10,marginTop:3,color:dl<0?C.danger:dl<=2?"#C7B98B":C.muted,fontFamily:"'DM Mono',monospace"}}>{dl<0?`OVERDUE ${Math.abs(dl)}d`:`${dl}d`}</div>
             </div>
           </div>
           <div style={{marginTop:5,display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:C.muted}}>{order.model}</span>
+            <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:C.muted}}>{order.model}</span>
             {order.size&&<Pill color={C.muted}>{order.size}</Pill>}
             <Pill color={pr.color}>{pr.label}</Pill>
             {order.cowork&&<Pill color="#8BA7C7">CO-WORK</Pill>}
@@ -224,21 +224,21 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
           <div style={{marginBottom:10}}>
             <label style={S.lbl}>แพลตฟอร์ม</label>
             <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {PLATFORMS.map(p=><button key={p.key} onClick={()=>onUpdate({...order,platform:order.platform===p.key?"":p.key})} style={{padding:"4px 8px",background:order.platform===p.key?p.color+"20":"transparent",color:order.platform===p.key?p.color:C.muted,border:`1px solid ${order.platform===p.key?p.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Sans',sans-serif",fontSize:10,cursor:"pointer"}}>{p.icon} {p.label}</button>)}
+              {PLATFORMS.map(p=><button key={p.key} onClick={()=>onUpdate({...order,platform:order.platform===p.key?"":p.key})} style={{padding:"4px 8px",background:order.platform===p.key?p.color+"20":"transparent",color:order.platform===p.key?p.color:C.muted,border:`1px solid ${order.platform===p.key?p.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer"}}>{p.icon} {p.label}</button>)}
             </div>
           </div>
           {/* Order type */}
           <div style={{marginBottom:10}}>
             <label style={S.lbl}>ประเภทงาน</label>
             <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {ORDER_TYPES.map(o=><button key={o.key} onClick={()=>onUpdate({...order,orderType:o.key})} style={{padding:"4px 8px",background:order.orderType===o.key?o.color+"20":"transparent",color:order.orderType===o.key?o.color:C.muted,border:`1px solid ${order.orderType===o.key?o.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Sans',sans-serif",fontSize:10,cursor:"pointer"}}>{o.icon} {o.label}</button>)}
+              {ORDER_TYPES.map(o=><button key={o.key} onClick={()=>onUpdate({...order,orderType:o.key})} style={{padding:"4px 8px",background:order.orderType===o.key?o.color+"20":"transparent",color:order.orderType===o.key?o.color:C.muted,border:`1px solid ${order.orderType===o.key?o.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer"}}>{o.icon} {o.label}</button>)}
             </div>
           </div>
           {/* Co-work */}
           <div style={{marginBottom:10}}>
             <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:6}}>
               <input type="checkbox" checked={!!order.cowork} onChange={e=>onUpdate({...order,cowork:e.target.checked})} style={{accentColor:"#8BA7C7"}}/>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#8BA7C7"}}>CO-WORK</span>
+              <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"#8BA7C7"}}>CO-WORK</span>
             </label>
             {order.cowork&&<textarea style={{...S.inp,minHeight:44,resize:"vertical"}} value={order.coworkNote||""} onChange={e=>onUpdate({...order,coworkNote:e.target.value})} placeholder="Otto: วาด / Smallbrush: พ่น"/>}
           </div>
@@ -250,15 +250,15 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
           {/* Finance */}
           {isBoss&&(order.orderType==="normal"||!order.orderType)&&(
             <div style={{background:C.bg,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"10px 12px",marginBottom:10}}>
-              <div style={{fontSize:10,letterSpacing:1,color:C.accent,fontFamily:"'DM Sans',sans-serif",fontWeight:600,marginBottom:8}}>FINANCE</div>
+              <div style={{fontSize:10,letterSpacing:1,color:C.accent,fontFamily:"'DM Mono',monospace",fontWeight:600,marginBottom:8}}>FINANCE</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
                 <div><label style={S.lbl}>ราคาเต็ม</label><input type="number" style={S.inp} value={order.price||""} onChange={e=>onUpdate({...order,price:Number(e.target.value)})}/></div>
                 <div><label style={S.lbl}>มัดจำ</label><input type="number" style={S.inp} value={order.deposit||""} onChange={e=>onUpdate({...order,deposit:Number(e.target.value)})}/></div>
-                <div><label style={S.lbl}>ค้าง</label><div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",color:C.danger,fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13}}>฿{fmt(Math.max(0,(order.price||0)-(order.deposit||0)))}</div></div>
+                <div><label style={S.lbl}>ค้าง</label><div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",color:C.danger,fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:13}}>฿{fmt(Math.max(0,(order.price||0)-(order.deposit||0)))}</div></div>
               </div>
               <div style={{display:"flex",gap:12}}>
-                <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:C.muted,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}><input type="checkbox" checked={!!order.depositPaid} onChange={e=>onUpdate({...order,depositPaid:e.target.checked})} style={{accentColor:C.accent}}/>รับมัดจำ</label>
-                <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:C.muted,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}><input type="checkbox" checked={!!order.fullPaid} onChange={e=>onUpdate({...order,fullPaid:e.target.checked})} style={{accentColor:C.ok}}/>ชำระครบ</label>
+                <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:C.muted,fontFamily:"'DM Mono',monospace",cursor:"pointer"}}><input type="checkbox" checked={!!order.depositPaid} onChange={e=>onUpdate({...order,depositPaid:e.target.checked})} style={{accentColor:C.accent}}/>รับมัดจำ</label>
+                <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:C.muted,fontFamily:"'DM Mono',monospace",cursor:"pointer"}}><input type="checkbox" checked={!!order.fullPaid} onChange={e=>onUpdate({...order,fullPaid:e.target.checked})} style={{accentColor:C.ok}}/>ชำระครบ</label>
               </div>
             </div>
           )}
@@ -266,7 +266,7 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
           <div style={{background:C.bg,borderRadius:8,padding:"10px 12px",border:`1px solid ${C.border}`,marginBottom:10}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
               <label style={S.lbl}>ความคืบหน้า</label>
-              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:20,color:order.progress>=100?C.ok:C.accent}}>{Math.round(order.progress||0)}%</span>
+              <span style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:20,color:order.progress>=100?C.ok:C.accent}}>{Math.round(order.progress||0)}%</span>
             </div>
             <div style={{position:"relative",height:28,display:"flex",alignItems:"center"}}>
               <div style={{position:"absolute",width:"100%",height:6,background:C.border,borderRadius:3,overflow:"hidden"}}>
@@ -276,16 +276,16 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
               <div style={{position:"absolute",left:`calc(${order.progress||0}% - 9px)`,width:18,height:18,background:order.progress>=100?C.ok:C.accent,borderRadius:"50%",border:`2px solid ${C.bg}`,pointerEvents:"none"}}/>
             </div>
             <div style={{display:"flex",gap:4,marginTop:6,flexWrap:"wrap"}}>
-              {[0,25,50,75,100].map(p=><button key={p} onClick={()=>onUpdate({...order,progress:p})} style={{fontSize:9,color:Math.round(order.progress||0)===p?C.accent:C.muted,background:"transparent",border:`1px solid ${Math.round(order.progress||0)===p?C.accent:C.border}`,borderRadius:4,padding:"2px 8px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{p}%</button>)}
+              {[0,25,50,75,100].map(p=><button key={p} onClick={()=>onUpdate({...order,progress:p})} style={{fontSize:9,color:Math.round(order.progress||0)===p?C.accent:C.muted,background:"transparent",border:`1px solid ${Math.round(order.progress||0)===p?C.accent:C.border}`,borderRadius:4,padding:"2px 8px",cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>{p}%</button>)}
             </div>
           </div>
           {/* Note */}
-          {order.note&&<div style={{marginBottom:10,padding:"8px 10px",background:C.bg,borderRadius:6,borderLeft:`2px solid ${C.border}`}}><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif",marginBottom:2}}>NOTE</div><div style={{fontSize:13,color:C.muted}}>{order.note}</div></div>}
+          {order.note&&<div style={{marginBottom:10,padding:"8px 10px",background:C.bg,borderRadius:6,borderLeft:`2px solid ${C.border}`}}><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace",marginBottom:2}}>NOTE</div><div style={{fontSize:13,color:C.muted}}>{order.note}</div></div>}
           {/* Actions */}
           <div style={{height:1,background:C.border,margin:"10px 0"}}/>
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-            {order.status!=="queue"&&<button onClick={prevSt} style={{flex:1,background:C.bg,color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,padding:"7px",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>← BACK</button>}
-            {order.status!=="done"&&<button onClick={nextSt} style={{flex:2,background:"transparent",color:st.color,border:`1px solid ${st.color}`,borderRadius:6,padding:"7px",fontSize:11,fontFamily:"'DM Sans',sans-serif",fontWeight:700,cursor:"pointer"}}>{order.status==="queue"?"START →":order.status==="inprogress"?"SEND REVIEW →":"MARK DONE ✓"}</button>}
+            {order.status!=="queue"&&<button onClick={prevSt} style={{flex:1,background:C.bg,color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,padding:"7px",fontSize:11,cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>← BACK</button>}
+            {order.status!=="done"&&<button onClick={nextSt} style={{flex:2,background:"transparent",color:st.color,border:`1px solid ${st.color}`,borderRadius:6,padding:"7px",fontSize:11,fontFamily:"'DM Mono',monospace",fontWeight:700,cursor:"pointer"}}>{order.status==="queue"?"START →":order.status==="inprogress"?"SEND REVIEW →":"MARK DONE ✓"}</button>}
             {isBoss&&<button onClick={()=>onDelete(order.id)} style={{padding:"7px 10px",background:"transparent",color:C.danger,border:`1px solid ${C.danger}30`,borderRadius:6,fontSize:11,cursor:"pointer"}}>✕</button>}
           </div>
         </div>
@@ -303,7 +303,7 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
     <div style={{position:"fixed",inset:0,background:"#000000d0",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200}} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`2px solid ${C.accent}`,borderRadius:"12px 12px 0 0",padding:20,width:"100%",maxWidth:480,maxHeight:"94vh",overflowY:"auto"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:20,color:C.text}}>New Order</div>
+          <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:20,color:C.text}}>New Order</div>
           <button onClick={onClose} style={{background:"none",border:`1px solid ${C.border}`,borderRadius:6,color:C.muted,fontSize:14,cursor:"pointer",width:30,height:30}}>✕</button>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -311,13 +311,13 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
           <div>
             <label style={S.lbl}>แพลตฟอร์ม</label>
             <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {PLATFORMS.map(p=><button key={p.key} onClick={()=>set("platform",form.platform===p.key?"":p.key)} style={{padding:"5px 8px",background:form.platform===p.key?p.color+"20":"transparent",color:form.platform===p.key?p.color:C.muted,border:`1px solid ${form.platform===p.key?p.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Sans',sans-serif",fontSize:10,cursor:"pointer"}}>{p.icon} {p.label}</button>)}
+              {PLATFORMS.map(p=><button key={p.key} onClick={()=>set("platform",form.platform===p.key?"":p.key)} style={{padding:"5px 8px",background:form.platform===p.key?p.color+"20":"transparent",color:form.platform===p.key?p.color:C.muted,border:`1px solid ${form.platform===p.key?p.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer"}}>{p.icon} {p.label}</button>)}
             </div>
           </div>
           <div>
             <label style={S.lbl}>ประเภทงาน</label>
             <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {ORDER_TYPES.map(o=><button key={o.key} onClick={()=>set("orderType",o.key)} style={{padding:"5px 8px",background:form.orderType===o.key?o.color+"20":"transparent",color:form.orderType===o.key?o.color:C.muted,border:`1px solid ${form.orderType===o.key?o.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Sans',sans-serif",fontSize:10,cursor:"pointer"}}>{o.icon} {o.label}</button>)}
+              {ORDER_TYPES.map(o=><button key={o.key} onClick={()=>set("orderType",o.key)} style={{padding:"5px 8px",background:form.orderType===o.key?o.color+"20":"transparent",color:form.orderType===o.key?o.color:C.muted,border:`1px solid ${form.orderType===o.key?o.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer"}}>{o.icon} {o.label}</button>)}
             </div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:8}}>
@@ -341,13 +341,13 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
           <div>
             <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:6}}>
               <input type="checkbox" checked={form.cowork} onChange={e=>set("cowork",e.target.checked)} style={{accentColor:"#8BA7C7"}}/>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#8BA7C7"}}>CO-WORK</span>
+              <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"#8BA7C7"}}>CO-WORK</span>
             </label>
             {form.cowork&&<textarea style={{...S.inp,minHeight:44,resize:"vertical"}} value={form.coworkNote} onChange={e=>set("coworkNote",e.target.value)} placeholder="Otto: วาด / Smallbrush: พ่น"/>}
           </div>
           {isBoss&&form.orderType==="normal"&&(
             <div style={{background:C.bg,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"10px 12px"}}>
-              <div style={{fontSize:10,letterSpacing:1,color:C.accent,fontFamily:"'DM Sans',sans-serif",fontWeight:600,marginBottom:8}}>FINANCE</div>
+              <div style={{fontSize:10,letterSpacing:1,color:C.accent,fontFamily:"'DM Mono',monospace",fontWeight:600,marginBottom:8}}>FINANCE</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                 <div><label style={S.lbl}>ราคาเต็ม (฿)</label><input type="number" style={S.inp} value={form.price} onChange={e=>set("price",e.target.value)}/></div>
                 <div><label style={S.lbl}>มัดจำ (฿)</label><input type="number" style={S.inp} value={form.deposit} onChange={e=>set("deposit",e.target.value)}/></div>
@@ -357,14 +357,14 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
           <ImageUploader label="รูปรองเท้า" images={form.images} onChange={v=>set("images",v)}/>
           <ImageUploader label="Design Reference" images={form.designImages} onChange={v=>set("designImages",v)}/>
         </div>
-        <button onClick={()=>{ if(!ok)return; const created=Date.now(); const model=form.model==="อื่นๆ"&&form.customModel?form.customModel:form.model; onAdd({...form,model,id:nextId,queueId:genQID(created,nextId),price:Number(form.price)||0,deposit:Number(form.deposit)||0,status:"queue",created,progress:0}); onClose(); }} style={{marginTop:16,width:"100%",background:ok?C.accent:"#1a1a1a",color:ok?C.bg:"#444",border:"none",borderRadius:8,padding:12,fontSize:13,fontFamily:"'DM Sans',sans-serif",fontWeight:700,letterSpacing:2,cursor:ok?"pointer":"default"}}>ADD TO QUEUE</button>
+        <button onClick={()=>{ if(!ok)return; const created=Date.now(); const model=form.model==="อื่นๆ"&&form.customModel?form.customModel:form.model; onAdd({...form,model,id:nextId,queueId:genQID(created,nextId),price:Number(form.price)||0,deposit:Number(form.deposit)||0,status:"queue",created,progress:0}); onClose(); }} style={{marginTop:16,width:"100%",background:ok?C.accent:"#1a1a1a",color:ok?C.bg:"#444",border:"none",borderRadius:8,padding:12,fontSize:13,fontFamily:"'DM Mono',monospace",fontWeight:700,letterSpacing:2,cursor:ok?"pointer":"default"}}>ADD TO QUEUE</button>
       </div>
     </div>
   );
 }
 
 // ── CALENDAR VIEW ─────────────────────────────────────
-function CalView({orders,workPlans,workSchedules,shopEvents}){
+function CalView({orders,workPlans,workSchedules,shopEvents,kpiLogs,isBoss}){
   const now=new Date();
   const [tab,setTab]=useState("week");
   const [month,setMonth]=useState(now.getMonth());
@@ -381,7 +381,7 @@ function CalView({orders,workPlans,workSchedules,shopEvents}){
   return(
     <div>
       <div style={{display:"flex",gap:6,marginBottom:12,background:C.bg,borderRadius:8,padding:4}}>
-        {[{k:"week",l:"Weekly"},{k:"month",l:"Monthly"}].map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"7px",background:tab===t.k?C.surface:"transparent",color:tab===t.k?C.text:C.muted,border:tab===t.k?`1px solid ${C.border}`:"1px solid transparent",borderRadius:6,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>{t.l}</button>)}
+        {[{k:"week",l:"Weekly"},{k:"month",l:"Monthly"}].map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"7px",background:tab===t.k?C.surface:"transparent",color:tab===t.k?C.text:C.muted,border:tab===t.k?`1px solid ${C.border}`:"1px solid transparent",borderRadius:6,fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:11,cursor:"pointer"}}>{t.l}</button>)}
       </div>
       {tab==="week"&&weekDays.map(wd=>{
         const dk=wd.toISOString().slice(0,10);
@@ -392,11 +392,24 @@ function CalView({orders,workPlans,workSchedules,shopEvents}){
         return(
           <div key={dk} style={{background:isToday?C.surface:C.bg,border:`1px solid ${isToday?C.accent+"44":C.border}`,borderRadius:8,padding:"10px 12px",marginBottom:6}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:Object.keys(dayPlan).length>0||dayEvents.length>0?8:0}}>
-              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:14,color:isToday?C.accent:C.text}}>{DAY_TH[wd.getDay()]} {wd.getDate()} {MONTHS_TH[wd.getMonth()]}{isToday&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:8,color:C.accent,letterSpacing:2,marginLeft:8}}>TODAY</span>}</span>
-              {dayOrders.length>0&&<span style={{fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>📦 {dayOrders.length}</span>}
+              <span style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:14,color:isToday?C.accent:C.text}}>{DAY_TH[wd.getDay()]} {wd.getDate()} {MONTHS_TH[wd.getMonth()]}{isToday&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:C.accent,letterSpacing:2,marginLeft:8}}>TODAY</span>}</span>
+              {dayOrders.length>0&&<span style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace"}}>📦 {dayOrders.length}</span>}
             </div>
-            {dayEvents.map((e,i)=>{ const et=EVENT_TYPES.find(t=>t.key===e.type); return <div key={i} style={{background:et?.color+"20",border:`1px solid ${et?.color}44`,borderLeft:`3px solid ${et?.color}`,borderRadius:5,padding:"4px 8px",marginBottom:4,fontSize:11,color:et?.color,fontFamily:"'DM Sans',sans-serif"}}>{et?.icon} {e.title||et?.label}</div>; })}
-            {TEAM.filter(m=>dayPlan[m]).map(m=>{ const dt=DAY_TYPES.find(d=>d.key===dayPlan[m]); return <div key={m} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:C.muted,minWidth:80}}>{m}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:9,color:dt?.color,background:dt?.color+"15",border:`1px solid ${dt?.color}30`,borderRadius:3,padding:"2px 8px"}}>{dt?.label}</span></div>; })}
+            {dayEvents.map((e,i)=>{ const et=EVENT_TYPES.find(t=>t.key===e.type); return <div key={i} style={{background:et?.color+"20",border:`1px solid ${et?.color}44`,borderLeft:`3px solid ${et?.color}`,borderRadius:5,padding:"4px 8px",marginBottom:4,fontSize:11,color:et?.color,fontFamily:"'DM Mono',monospace"}}>{et?.icon} {e.title||et?.label}</div>; })}
+            {TEAM.filter(m=>dayPlan[m]).map(m=>{
+              const dt=DAY_TYPES.find(d=>d.key===dayPlan[m]);
+              const entry=kpiLogs?.[`${dk}__${m}`];
+              const passed=entry?kpiPass({...entry,dayType:dayPlan[m]}):null;
+              return(
+                <div key={m} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:C.muted,minWidth:80}}>{m}</span>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:9,color:dt?.color,background:dt?.color+"15",border:`1px solid ${dt?.color}30`,borderRadius:3,padding:"2px 8px"}}>{dt?.label}</span>
+                  {passed===true&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:C.ok,fontWeight:700}}>✓ PASS</span>}
+                  {passed===false&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:C.danger,fontWeight:700}}>✗ MISS</span>}
+                  {passed===null&&entry===undefined&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:C.muted}}>—</span>}
+                </div>
+              );
+            })}
           </div>
         );
       })}
@@ -405,10 +418,10 @@ function CalView({orders,workPlans,workSchedules,shopEvents}){
           <div style={S.card}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
               <button onClick={()=>navM(-1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"4px 10px",cursor:"pointer"}}>‹</button>
-              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:15,color:C.text}}>{MONTHS_TH[month]} {year}</span>
+              <span style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:15,color:C.text}}>{MONTHS_TH[month]} {year}</span>
               <button onClick={()=>navM(1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"4px 10px",cursor:"pointer"}}>›</button>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{["อา","จ","อ","พ","พฤ","ศ","ส"].map(d=><div key={d} style={{textAlign:"center",fontSize:8,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>{d}</div>)}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{["อา","จ","อ","พ","พฤ","ศ","ส"].map(d=><div key={d} style={{textAlign:"center",fontSize:8,color:C.muted,fontFamily:"'DM Mono',monospace"}}>{d}</div>)}</div>
             {weeks.map((wk,wi)=>(
               <div key={wi} style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:2}}>
                 {wk.map((day,di)=>{
@@ -419,9 +432,9 @@ function CalView({orders,workPlans,workSchedules,shopEvents}){
                   const hasEvent=(shopEvents||[]).some(e=>dk&&dk>=e.date&&dk<=(e.endDate||e.date));
                   return(
                     <div key={di} style={{minHeight:38,background:day?(isToday?C.surface:C.bg):"transparent",borderRadius:4,padding:"2px",border:isToday?`1px solid ${C.accent}44`:"1px solid transparent"}}>
-                      {day&&<div style={{fontSize:8,color:isToday?C.accent:C.muted,fontFamily:"'Inter',sans-serif",fontWeight:isToday?700:400}}>{day}</div>}
-                      {ords.map((o,i)=>{ const st=STATUSES.find(s=>s.key===o.status); return <div key={i} style={{fontSize:5,background:st.color+"22",color:st.color,borderRadius:2,padding:"1px 2px",marginTop:1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",fontFamily:"'DM Sans',sans-serif"}}>{o.customer}</div>; })}
-                      {types.map((t,i)=>{ const dt=DAY_TYPES.find(d=>d.key===t); return dt?<div key={i} style={{fontSize:5,background:dt.color+"15",color:dt.color,borderRadius:2,padding:"1px 2px",marginTop:1,fontFamily:"'DM Sans',sans-serif"}}>{dt.short}</div>:null; })}
+                      {day&&<div style={{fontSize:8,color:isToday?C.accent:C.muted,fontFamily:"'Syne',sans-serif",fontWeight:isToday?700:400}}>{day}</div>}
+                      {ords.map((o,i)=>{ const st=STATUSES.find(s=>s.key===o.status); return <div key={i} style={{fontSize:5,background:st.color+"22",color:st.color,borderRadius:2,padding:"1px 2px",marginTop:1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",fontFamily:"'DM Mono',monospace"}}>{o.customer}</div>; })}
+                      {types.map((t,i)=>{ const dt=DAY_TYPES.find(d=>d.key===t); return dt?<div key={i} style={{fontSize:5,background:dt.color+"15",color:dt.color,borderRadius:2,padding:"1px 2px",marginTop:1,fontFamily:"'DM Mono',monospace"}}>{dt.short}</div>:null; })}
                       {hasEvent&&<div style={{fontSize:6}}>📌</div>}
                     </div>
                   );
@@ -432,11 +445,11 @@ function CalView({orders,workPlans,workSchedules,shopEvents}){
           {upcoming.map(o=>{ const st=STATUSES.find(s=>s.key===o.status); const dl=daysLeft(o.deadline); return(
             <div key={o.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:C.surface,borderRadius:8,marginBottom:5,borderLeft:`2px solid ${st.color}`}}>
               <div style={{flex:1,minWidth:0}}>
-                <div><span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{o.customer}</span><span style={{fontSize:10,color:C.muted,marginLeft:6,fontFamily:"'DM Sans',sans-serif"}}>{o.model}</span></div>
+                <div><span style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{o.customer}</span><span style={{fontSize:10,color:C.muted,marginLeft:6,fontFamily:"'DM Mono',monospace"}}>{o.model}</span></div>
                 <div style={{marginTop:4}}><MiniProgress progress={o.status==="done"?100:(o.progress||0)}/></div>
               </div>
               <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0,marginLeft:8}}>
-                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:dl<0?C.danger:dl<=2?"#C7B98B":C.muted}}>{dl<0?"OVERDUE":`${dl}d`}</span>
+                <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:dl<0?C.danger:dl<=2?"#C7B98B":C.muted}}>{dl<0?"OVERDUE":`${dl}d`}</span>
               </div>
             </div>
           ); })}
@@ -473,12 +486,12 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,shop
       {/* Month nav */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
         <button onClick={()=>navM(-1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"5px 12px",cursor:"pointer"}}>‹</button>
-        <span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:15,color:C.text}}>{MONTHS_TH[pm]} {py}</span>
+        <span style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:15,color:C.text}}>{MONTHS_TH[pm]} {py}</span>
         <button onClick={()=>navM(1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"5px 12px",cursor:"pointer"}}>›</button>
       </div>
       {/* Calendar grid */}
       <div style={S.card}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{["อา","จ","อ","พ","พฤ","ศ","ส"].map(d=><div key={d} style={{textAlign:"center",fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>{d}</div>)}</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{["อา","จ","อ","พ","พฤ","ศ","ส"].map(d=><div key={d} style={{textAlign:"center",fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace"}}>{d}</div>)}</div>
         {weeks.map((wk,wi)=>(
           <div key={wi} style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:2}}>
             {wk.map((day,di)=>{
@@ -491,7 +504,7 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,shop
               const hasEv=(shopEvents||[]).some(e=>dk&&dk>=e.date&&dk<=(e.endDate||e.date));
               return(
                 <div key={di} onClick={()=>dk&&setSelDay(isSel?null:dk)} style={{minHeight:44,background:day?(isSel?C.surface:isToday?"#1c1000":C.bg):"transparent",borderRadius:5,padding:"3px",border:isSel?`1px solid ${C.accent}`:isToday?`1px solid ${C.accent}44`:"1px solid transparent",cursor:day?"pointer":"default"}}>
-                  {day&&<div style={{fontSize:9,color:isSel?C.accent:isToday?C.accent:C.muted,fontFamily:"'Inter',sans-serif",fontWeight:isSel||isToday?700:400,marginBottom:2}}>{day}</div>}
+                  {day&&<div style={{fontSize:9,color:isSel?C.accent:isToday?C.accent:C.muted,fontFamily:"'Syne',sans-serif",fontWeight:isSel||isToday?700:400,marginBottom:2}}>{day}</div>}
                   {mainDt&&<div style={{height:3,background:mainDt.color,borderRadius:1,marginBottom:2}}/>}
                   {types.length>0&&<div style={{display:"flex",gap:1}}>{types.map(t=>{ const dt2=DAY_TYPES.find(d=>d.key===t); return dt2?<div key={t} style={{width:5,height:5,borderRadius:"50%",background:dt2.color}}/>:null; })}</div>}
                   {hasEv&&<div style={{fontSize:6}}>📌</div>}
@@ -509,35 +522,35 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,shop
         return(
           <div style={{...S.card,border:`1px solid ${C.accent}44`,marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:15,color:selDay===todayKey()?C.accent:C.text}}>{DAY_TH[d.getDay()]} {d.getDate()} {MONTHS_TH[d.getMonth()]} {d.getFullYear()}</span>
+              <span style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:15,color:selDay===todayKey()?C.accent:C.text}}>{DAY_TH[d.getDay()]} {d.getDate()} {MONTHS_TH[d.getMonth()]} {d.getFullYear()}</span>
               <div style={{display:"flex",gap:4}}>
-                {DAY_TYPES.map(dt=><button key={dt.key} onClick={()=>applyAll(selDay,dt.key)} style={{fontSize:9,background:dt.color+"15",color:dt.color,border:`1px solid ${dt.color}30`,borderRadius:4,padding:"3px 7px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{dt.short}</button>)}
-                <button onClick={()=>applyAll(selDay,null)} style={{fontSize:9,background:C.surface,color:C.muted,border:`1px solid ${C.border}`,borderRadius:4,padding:"3px 7px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>CLR</button>
+                {DAY_TYPES.map(dt=><button key={dt.key} onClick={()=>applyAll(selDay,dt.key)} style={{fontSize:9,background:dt.color+"15",color:dt.color,border:`1px solid ${dt.color}30`,borderRadius:4,padding:"3px 7px",cursor:"pointer",fontFamily:"'DM Mono',monospace",fontWeight:600}}>{dt.short}</button>)}
+                <button onClick={()=>applyAll(selDay,null)} style={{fontSize:9,background:C.surface,color:C.muted,border:`1px solid ${C.border}`,borderRadius:4,padding:"3px 7px",cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>CLR</button>
               </div>
             </div>
             {TEAM.map(m=>{ const cur=dp[m]; return(
               <div key={m} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:C.muted,minWidth:90}}>{m}</span>
+                <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:C.muted,minWidth:90}}>{m}</span>
                 <div style={{display:"flex",gap:4,flex:1}}>
-                  {DAY_TYPES.map(dt=><button key={dt.key} onClick={()=>set(selDay,m,cur===dt.key?null:dt.key)} style={{flex:1,padding:"6px 2px",background:cur===dt.key?dt.color+"25":"transparent",color:cur===dt.key?dt.color:C.muted,border:`1px solid ${cur===dt.key?dt.color+"60":C.border}`,borderRadius:6,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:10,cursor:"pointer"}}>{dt.short}</button>)}
+                  {DAY_TYPES.map(dt=><button key={dt.key} onClick={()=>set(selDay,m,cur===dt.key?null:dt.key)} style={{flex:1,padding:"6px 2px",background:cur===dt.key?dt.color+"25":"transparent",color:cur===dt.key?dt.color:C.muted,border:`1px solid ${cur===dt.key?dt.color+"60":C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:10,cursor:"pointer"}}>{dt.short}</button>)}
                   {cur&&<button onClick={()=>set(selDay,m,null)} style={{padding:"6px 8px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,fontSize:10,cursor:"pointer"}}>✕</button>}
                 </div>
               </div>
             ); })}
-            {dayEvs.length>0&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.border}`}}>{dayEvs.map(e=>{ const et=EVENT_TYPES.find(t=>t.key===e.type); return <div key={e.id} style={{fontSize:11,color:et?.color,fontFamily:"'DM Sans',sans-serif",marginBottom:2}}>{et?.icon} {e.title||et?.label}</div>; })}</div>}
+            {dayEvs.length>0&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.border}`}}>{dayEvs.map(e=>{ const et=EVENT_TYPES.find(t=>t.key===e.type); return <div key={e.id} style={{fontSize:11,color:et?.color,fontFamily:"'DM Mono',monospace",marginBottom:2}}>{et?.icon} {e.title||et?.label}</div>; })}</div>}
           </div>
         );
       })()}
       {/* Shop Events */}
       <div style={{marginBottom:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <span style={{fontSize:10,letterSpacing:1,color:C.accent,fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>📅 กิจกรรมพิเศษ</span>
-          <button onClick={()=>setShowAddEv(s=>!s)} style={{background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:"5px 10px",fontSize:10,fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer"}}>+ เพิ่ม</button>
+          <span style={{fontSize:10,letterSpacing:1,color:C.accent,fontFamily:"'DM Mono',monospace",fontWeight:600}}>📅 กิจกรรมพิเศษ</span>
+          <button onClick={()=>setShowAddEv(s=>!s)} style={{background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:"5px 10px",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:600,cursor:"pointer"}}>+ เพิ่ม</button>
         </div>
         {showAddEv&&(
           <div style={{...S.card,border:`1px solid ${C.accent}33`,marginBottom:8}}>
             <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}>
-              {EVENT_TYPES.map(et=><button key={et.key} onClick={()=>setNewEv(n=>({...n,type:et.key}))} style={{padding:"4px 8px",background:newEv.type===et.key?et.color+"20":"transparent",color:newEv.type===et.key?et.color:C.muted,border:`1px solid ${newEv.type===et.key?et.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Sans',sans-serif",fontSize:10,cursor:"pointer"}}>{et.icon} {et.label}</button>)}
+              {EVENT_TYPES.map(et=><button key={et.key} onClick={()=>setNewEv(n=>({...n,type:et.key}))} style={{padding:"4px 8px",background:newEv.type===et.key?et.color+"20":"transparent",color:newEv.type===et.key?et.color:C.muted,border:`1px solid ${newEv.type===et.key?et.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer"}}>{et.icon} {et.label}</button>)}
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               <div><label style={S.lbl}>ชื่อกิจกรรม</label><input style={S.inp} value={newEv.title} onChange={e=>setNewEv(n=>({...n,title:e.target.value}))} placeholder="เช่น บูธ Central World"/></div>
@@ -546,13 +559,13 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,shop
                 <div><label style={S.lbl}>วันสิ้นสุด</label><input type="date" style={S.inp} value={newEv.endDate} onChange={e=>setNewEv(n=>({...n,endDate:e.target.value}))}/></div>
               </div>
               <div><label style={S.lbl}>โน้ต</label><input style={S.inp} value={newEv.note} onChange={e=>setNewEv(n=>({...n,note:e.target.value}))}/></div>
-              <button onClick={addEv} style={{background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:"8px",fontSize:11,fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer"}}>+ บันทึก</button>
+              <button onClick={addEv} style={{background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:"8px",fontSize:11,fontFamily:"'DM Mono',monospace",fontWeight:600,cursor:"pointer"}}>+ บันทึก</button>
             </div>
           </div>
         )}
         {(shopEvents||[]).filter(e=>{ const d=new Date(e.date); return d.getMonth()===pm&&d.getFullYear()===py; }).map(e=>{ const et=EVENT_TYPES.find(t=>t.key===e.type); return(
           <div key={e.id} style={{background:C.bg,border:`1px solid ${et?.color||C.accent}44`,borderLeft:`3px solid ${et?.color||C.accent}`,borderRadius:8,padding:"8px 12px",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-            <div><div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{et?.icon} {e.title||et?.label}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>{e.date}{e.endDate&&` → ${e.endDate}`}</div></div>
+            <div><div style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{et?.icon} {e.title||et?.label}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'DM Mono',monospace"}}>{e.date}{e.endDate&&` → ${e.endDate}`}</div></div>
             <button onClick={()=>delEv(e.id)} style={{background:"none",border:"none",color:C.muted,cursor:"pointer"}}>✕</button>
           </div>
         ); })}
@@ -560,8 +573,8 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,shop
       {/* Multi-day schedules */}
       <div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <span style={{fontSize:10,letterSpacing:1,color:"#8BA7C7",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>📋 แผนงานหลายวัน</span>
-          <button onClick={()=>setShowAddSch(s=>!s)} style={{background:"#8BA7C7",color:C.bg,border:"none",borderRadius:6,padding:"5px 10px",fontSize:10,fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer"}}>+ เพิ่ม</button>
+          <span style={{fontSize:10,letterSpacing:1,color:"#8BA7C7",fontFamily:"'DM Mono',monospace",fontWeight:600}}>📋 แผนงานหลายวัน</span>
+          <button onClick={()=>setShowAddSch(s=>!s)} style={{background:"#8BA7C7",color:C.bg,border:"none",borderRadius:6,padding:"5px 10px",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:600,cursor:"pointer"}}>+ เพิ่ม</button>
         </div>
         {showAddSch&&(
           <div style={{...S.card,border:"1px solid #8BA7C733",marginBottom:8}}>
@@ -572,13 +585,13 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,shop
                 <div><label style={S.lbl}>จำนวนวัน</label><input type="number" min="1" style={S.inp} value={newSch.days} onChange={e=>setNewSch(n=>({...n,days:e.target.value}))}/></div>
                 <div><label style={S.lbl}>ช่าง</label><select style={S.inp} value={newSch.assignee} onChange={e=>setNewSch(n=>({...n,assignee:e.target.value}))}>{TEAM.map(t=><option key={t}>{t}</option>)}</select></div>
               </div>
-              <button onClick={addSch} style={{background:"#8BA7C7",color:C.bg,border:"none",borderRadius:6,padding:"8px",fontSize:11,fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer"}}>+ บันทึก</button>
+              <button onClick={addSch} style={{background:"#8BA7C7",color:C.bg,border:"none",borderRadius:6,padding:"8px",fontSize:11,fontFamily:"'DM Mono',monospace",fontWeight:600,cursor:"pointer"}}>+ บันทึก</button>
             </div>
           </div>
         )}
         {(workSchedules||[]).map(s=>{ const o=orders.find(x=>String(x.id)===String(s.orderId)); const st=o?STATUSES.find(x=>x.key===o.status):null; const end=new Date(s.startDate); end.setDate(end.getDate()+s.days-1); return(
           <div key={s.id} style={{background:C.bg,border:`1px solid ${st?.color||C.border}44`,borderLeft:`3px solid ${st?.color||"#8BA7C7"}`,borderRadius:8,padding:"8px 12px",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-            <div><div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{o?.customer||"?"}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>{s.assignee} · {s.startDate} → {end.toISOString().slice(0,10)} ({s.days}วัน)</div></div>
+            <div><div style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{o?.customer||"?"}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'DM Mono',monospace"}}>{s.assignee} · {s.startDate} → {end.toISOString().slice(0,10)} ({s.days}วัน)</div></div>
             <button onClick={()=>delSch(s.id)} style={{background:"none",border:"none",color:C.muted,cursor:"pointer"}}>✕</button>
           </div>
         ); })}
@@ -607,14 +620,14 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
     <div>
       {isBoss&&(
         <div style={S.card}>
-          <div style={{fontSize:10,letterSpacing:1,color:C.accent,fontFamily:"'DM Sans',sans-serif",fontWeight:600,marginBottom:10}}>TEAM — {selDate}</div>
+          <div style={{fontSize:10,letterSpacing:1,color:C.accent,fontFamily:"'DM Mono',monospace",fontWeight:600,marginBottom:10}}>TEAM — {selDate}</div>
           <div style={{display:"flex",gap:6}}>
             {teamSum.map(({m,logged,ok,dayType,linked})=>{ const dtc=DAY_TYPES.find(d=>d.key===dayType); return(
               <div key={m} onClick={()=>setSelMember(m)} style={{flex:1,background:selMember===m?C.surface:C.bg,border:`1px solid ${selMember===m?C.accent:C.border}`,borderRadius:8,padding:"8px 6px",cursor:"pointer",textAlign:"center"}}>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,color:C.text,marginBottom:2}}>{m}</div>
-                {dtc&&<div style={{fontSize:8,color:dtc.color,fontFamily:"'DM Sans',sans-serif",marginBottom:2}}>{dtc.short}</div>}
-                {logged?<div style={{fontSize:11,color:ok?C.ok:C.danger}}>{ok?"✓ PASS":"✗ MISS"}</div>:<div style={{fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>ยังไม่กรอก</div>}
-                {linked?.length>0&&<div style={{fontSize:7,color:C.accent,marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>{linked.map(o=>o.customer).join(", ")}</div>}
+                <div style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,color:C.text,marginBottom:2}}>{m}</div>
+                {dtc&&<div style={{fontSize:8,color:dtc.color,fontFamily:"'DM Mono',monospace",marginBottom:2}}>{dtc.short}</div>}
+                {logged?<div style={{fontSize:11,color:ok?C.ok:C.danger}}>{ok?"✓ PASS":"✗ MISS"}</div>:<div style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace"}}>ยังไม่กรอก</div>}
+                {linked?.length>0&&<div style={{fontSize:7,color:C.accent,marginTop:2,fontFamily:"'DM Mono',monospace"}}>{linked.map(o=>o.customer).join(", ")}</div>}
               </div>
             ); })}
           </div>
@@ -624,34 +637,34 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
         <div><label style={S.lbl}>วันที่</label><input type="date" style={S.inp} value={selDate} onChange={e=>setSelDate(e.target.value)}/></div>
         {isBoss&&<div><label style={S.lbl}>ช่าง</label><select style={S.inp} value={selMember} onChange={e=>setSelMember(e.target.value)}>{TEAM.map(t=><option key={t}>{t}</option>)}</select></div>}
       </div>
-      {assignedDT&&<div style={{background:dtObj?.color+"12",border:`1px solid ${dtObj?.color}30`,borderRadius:8,padding:"8px 12px",marginBottom:12,display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,color:dtObj?.color}}>{dtObj?.label}</span><span style={{fontSize:10,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>— กำหนดโดย Smallbrush</span></div>}
+      {assignedDT&&<div style={{background:dtObj?.color+"12",border:`1px solid ${dtObj?.color}30`,borderRadius:8,padding:"8px 12px",marginBottom:12,display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:12,color:dtObj?.color}}>{dtObj?.label}</span><span style={{fontSize:10,color:C.muted,fontFamily:"'DM Mono',monospace"}}>— กำหนดโดย Smallbrush</span></div>}
       <div style={S.card}>
-        <div style={{fontSize:10,letterSpacing:1,color:dtObj?.color,fontFamily:"'DM Sans',sans-serif",fontWeight:600,marginBottom:12}}>{dtObj?.label||"DAY"}</div>
+        <div style={{fontSize:10,letterSpacing:1,color:dtObj?.color,fontFamily:"'DM Mono',monospace",fontWeight:600,marginBottom:12}}>{dtObj?.label||"DAY"}</div>
         {/* Linked orders with progress */}
         {(dt==="production"||dt==="depend")&&(
           <div style={{background:C.bg,border:`1px solid ${C.accent}33`,borderRadius:8,padding:"10px 12px",marginBottom:12}}>
-            <div style={{fontSize:10,color:C.accent,fontFamily:"'DM Sans',sans-serif",fontWeight:600,marginBottom:8}}>ออเดอร์ที่ทำวันนี้</div>
+            <div style={{fontSize:10,color:C.accent,fontFamily:"'DM Mono',monospace",fontWeight:600,marginBottom:8}}>ออเดอร์ที่ทำวันนี้</div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {orders.filter(o=>o.status!=="done").map(o=>{
                 const linked=(entry.linkedOrders||[]).includes(String(o.id));
                 const st2=STATUSES.find(s=>s.key===o.status);
                 return(
                   <div key={o.id}>
-                    <button onClick={()=>{ const cur=entry.linkedOrders||[]; const next=linked?cur.filter(x=>x!==String(o.id)):[...cur,String(o.id)]; setEntry({...entry,linkedOrders:next}); }} style={{padding:"5px 10px",background:linked?st2?.color+"25":"transparent",color:linked?st2?.color:C.muted,border:`1px solid ${linked?st2?.color+"55":C.border}`,borderRadius:6,fontFamily:"'DM Sans',sans-serif",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",gap:4,width:"100%"}}>
+                    <button onClick={()=>{ const cur=entry.linkedOrders||[]; const next=linked?cur.filter(x=>x!==String(o.id)):[...cur,String(o.id)]; setEntry({...entry,linkedOrders:next}); }} style={{padding:"5px 10px",background:linked?st2?.color+"25":"transparent",color:linked?st2?.color:C.muted,border:`1px solid ${linked?st2?.color+"55":C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",gap:4,width:"100%"}}>
                       {linked&&<span>✓</span>}<span style={{fontWeight:600}}>{o.customer}</span><span style={{fontSize:9,opacity:0.6,marginLeft:2}}>{o.model?.split(" ").slice(0,2).join(" ")}</span>
                     </button>
                     {linked&&(
                       <div style={{padding:"8px 10px",background:C.surface,borderRadius:"0 0 6px 6px",border:`1px solid ${st2?.color}33`,borderTop:"none"}}>
                         <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                          <span style={{fontSize:10,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>Progress</span>
-                          <span style={{fontSize:10,color:st2?.color,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{Math.round(o.progress||0)}%</span>
+                          <span style={{fontSize:10,color:C.muted,fontFamily:"'DM Mono',monospace"}}>Progress</span>
+                          <span style={{fontSize:10,color:st2?.color,fontWeight:700,fontFamily:"'DM Mono',monospace"}}>{Math.round(o.progress||0)}%</span>
                         </div>
                         <div style={{position:"relative",height:26,display:"flex",alignItems:"center"}}>
                           <div style={{position:"absolute",width:"100%",height:5,background:C.border,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:`${o.progress||0}%`,background:st2?.color,borderRadius:2}}/></div>
                           <input type="range" min="0" max="100" step="5" value={o.progress||0} onChange={e=>updateOrderProgress(o.id,Number(e.target.value))} style={{position:"absolute",width:"100%",opacity:0,cursor:"pointer",height:26}}/>
                           <div style={{position:"absolute",left:`calc(${o.progress||0}% - 8px)`,width:16,height:16,background:st2?.color,borderRadius:"50%",border:`2px solid ${C.bg}`,pointerEvents:"none"}}/>
                         </div>
-                        <div style={{display:"flex",gap:4,marginTop:4}}>{[0,25,50,75,100].map(p=><button key={p} onClick={()=>updateOrderProgress(o.id,p)} style={{fontSize:9,color:Math.round(o.progress||0)===p?st2?.color:C.muted,background:"transparent",border:`1px solid ${Math.round(o.progress||0)===p?st2?.color:C.border}`,borderRadius:4,padding:"2px 6px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{p}%</button>)}</div>
+                        <div style={{display:"flex",gap:4,marginTop:4}}>{[0,25,50,75,100].map(p=><button key={p} onClick={()=>updateOrderProgress(o.id,p)} style={{fontSize:9,color:Math.round(o.progress||0)===p?st2?.color:C.muted,background:"transparent",border:`1px solid ${Math.round(o.progress||0)===p?st2?.color:C.border}`,borderRadius:4,padding:"2px 6px",cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>{p}%</button>)}</div>
                       </div>
                     )}
                   </div>
@@ -664,25 +677,25 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
         {dt==="production"&&(
           <>
             <div style={{background:C.bg,borderRadius:6,padding:"8px 10px",marginBottom:12,border:`1px solid ${C.border}`}}>
-              <div style={{fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif",marginBottom:6}}>ต้องทำอย่างใดอย่างหนึ่ง</div>
+              <div style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace",marginBottom:6}}>ต้องทำอย่างใดอย่างหนึ่ง</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
                 {[{fld:"small",label:"เล็ก",target:1.5},{fld:"medium",label:"กลาง",target:1},{fld:"large",label:"ใหญ่",target:0.25}].map(({fld,label,target})=>{
                   const val=entry.production?.[fld]||0;
                   const ok2=val>=target;
                   return(
                     <div key={fld} style={{background:ok2?C.ok+"15":C.surface,border:`1px solid ${ok2?C.ok+"44":C.border}`,borderRadius:6,padding:"8px"}}>
-                      <div style={{fontSize:9,color:ok2?C.ok:C.muted,fontFamily:"'DM Sans',sans-serif",marginBottom:4}}>{label} (≥{target})</div>
+                      <div style={{fontSize:9,color:ok2?C.ok:C.muted,fontFamily:"'DM Mono',monospace",marginBottom:4}}>{label} (≥{target})</div>
                       <input type="number" min="0" step="0.25" style={{...S.inp,padding:"6px 8px",fontSize:13,fontWeight:700,color:ok2?C.ok:C.text,background:"transparent",border:`1px solid ${C.border}`}} value={val||""} onChange={e=>setField("production",fld,e.target.value)} placeholder="0"/>
                     </div>
                   );
                 })}
               </div>
-              {prodSizeOk&&<div style={{marginTop:6,fontSize:9,color:C.ok,fontFamily:"'DM Sans',sans-serif"}}>✓ ผ่านเป้าขนาดงาน</div>}
+              {prodSizeOk&&<div style={{marginTop:6,fontSize:9,color:C.ok,fontFamily:"'DM Mono',monospace"}}>✓ ผ่านเป้าขนาดงาน</div>}
             </div>
             <div style={{background:footageOk?C.ok+"12":C.surface,border:`1px solid ${footageOk?C.ok+"44":C.border}`,borderRadius:6,padding:"10px",marginBottom:12}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                <div><label style={S.lbl}>Raw Footage</label><div style={{fontSize:8,color:C.accent,fontFamily:"'DM Sans',sans-serif"}}>ต้องถ่ายทุกวัน</div></div>
-                <span style={{fontSize:10,color:footageOk?C.ok:C.danger,fontFamily:"'DM Sans',sans-serif"}}>{entry.production?.footage||0}/2 คลิป</span>
+                <div><label style={S.lbl}>Raw Footage</label><div style={{fontSize:8,color:C.accent,fontFamily:"'DM Mono',monospace"}}>ต้องถ่ายทุกวัน</div></div>
+                <span style={{fontSize:10,color:footageOk?C.ok:C.danger,fontFamily:"'DM Mono',monospace"}}>{entry.production?.footage||0}/2 คลิป</span>
               </div>
               <input type="number" min="0" style={S.inp} value={entry.production?.footage||""} onChange={e=>setField("production","footage",e.target.value)} placeholder="0"/>
               <div style={{marginTop:4}}><MiniBar pct={((entry.production?.footage||0)/2)*100} color={footageOk?C.ok:C.danger}/></div>
@@ -693,7 +706,7 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
             {[{fld:"posts",label:"โพสต์",target:1,unit:"โพสต์"},{fld:"footage",label:"Raw Footage",target:3,unit:"คลิป"},{fld:"reels",label:"Reels",target:3,unit:"ชิ้น"}].map(({fld,label,target,unit})=>(
               <div key={fld}><label style={S.lbl}>{label}</label>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:10,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>{label}</span><span style={{fontSize:10,color:(entry.content?.[fld]||0)>=target?C.ok:C.danger,fontFamily:"'DM Sans',sans-serif"}}>{entry.content?.[fld]||0}/{target} {unit}</span></div>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:10,color:C.muted,fontFamily:"'DM Mono',monospace"}}>{label}</span><span style={{fontSize:10,color:(entry.content?.[fld]||0)>=target?C.ok:C.danger,fontFamily:"'DM Mono',monospace"}}>{entry.content?.[fld]||0}/{target} {unit}</span></div>
                 <input type="number" min="0" style={S.inp} value={entry.content?.[fld]||""} onChange={e=>setField("content",fld,e.target.value)} placeholder="0"/>
                 <div style={{marginTop:4}}><MiniBar pct={((entry.content?.[fld]||0)/target)*100} color={(entry.content?.[fld]||0)>=target?C.ok:C.danger}/></div>
               </div>
@@ -702,7 +715,7 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
         )}
         {dt==="design"&&(
           <div>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><label style={S.lbl}>แบบที่ออกแบบ</label><span style={{fontSize:10,color:(entry.design?.designs||0)>=4?C.ok:C.danger,fontFamily:"'DM Sans',sans-serif"}}>{entry.design?.designs||0}/4 แบบ</span></div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><label style={S.lbl}>แบบที่ออกแบบ</label><span style={{fontSize:10,color:(entry.design?.designs||0)>=4?C.ok:C.danger,fontFamily:"'DM Mono',monospace"}}>{entry.design?.designs||0}/4 แบบ</span></div>
             <input type="number" min="0" style={S.inp} value={entry.design?.designs||""} onChange={e=>setField("design","designs",e.target.value)} placeholder="0"/>
             <div style={{marginTop:4}}><MiniBar pct={((entry.design?.designs||0)/4)*100} color={(entry.design?.designs||0)>=4?C.ok:C.danger}/></div>
           </div>
@@ -711,13 +724,13 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
           <div>
             <div style={{marginBottom:10}}><label style={S.lbl}>งานที่มอบหมายวันนี้</label><textarea style={{...S.inp,minHeight:80,resize:"vertical"}} value={entry.dependTasks||""} onChange={e=>setEntry({...entry,dependTasks:e.target.value})} placeholder={"- ถ่ายรูปชิ้นงาน\n- ส่งงานลูกค้า"}/></div>
             <div style={{marginBottom:10}}><label style={S.lbl}>ผลการทำงาน</label><textarea style={{...S.inp,minHeight:60,resize:"vertical"}} value={entry.dependResult||""} onChange={e=>setEntry({...entry,dependResult:e.target.value})} placeholder="บันทึกสิ่งที่ทำเสร็จ..."/></div>
-            {isBoss&&<div style={{display:"flex",gap:8}}><button onClick={()=>setEntry({...entry,dependPass:true})} style={{flex:1,padding:"10px",background:entry.dependPass===true?C.ok+"20":"transparent",color:entry.dependPass===true?C.ok:C.muted,border:`1px solid ${entry.dependPass===true?C.ok+"60":C.border}`,borderRadius:6,fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>✓ PASS</button><button onClick={()=>setEntry({...entry,dependPass:false})} style={{flex:1,padding:"10px",background:entry.dependPass===false?C.danger+"20":"transparent",color:entry.dependPass===false?C.danger:C.muted,border:`1px solid ${entry.dependPass===false?C.danger+"60":C.border}`,borderRadius:6,fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>✗ MISS</button></div>}
-            {!isBoss&&<div style={{background:C.bg,borderRadius:6,padding:"8px 12px",border:`1px solid ${C.border}`,fontSize:11,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>Smallbrush จะประเมินผล</div>}
+            {isBoss&&<div style={{display:"flex",gap:8}}><button onClick={()=>setEntry({...entry,dependPass:true})} style={{flex:1,padding:"10px",background:entry.dependPass===true?C.ok+"20":"transparent",color:entry.dependPass===true?C.ok:C.muted,border:`1px solid ${entry.dependPass===true?C.ok+"60":C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:12,cursor:"pointer"}}>✓ PASS</button><button onClick={()=>setEntry({...entry,dependPass:false})} style={{flex:1,padding:"10px",background:entry.dependPass===false?C.danger+"20":"transparent",color:entry.dependPass===false?C.danger:C.muted,border:`1px solid ${entry.dependPass===false?C.danger+"60":C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:12,cursor:"pointer"}}>✗ MISS</button></div>}
+            {!isBoss&&<div style={{background:C.bg,borderRadius:6,padding:"8px 12px",border:`1px solid ${C.border}`,fontSize:11,color:C.muted,fontFamily:"'DM Mono',monospace"}}>Smallbrush จะประเมินผล</div>}
           </div>
         )}
         <div style={{height:1,background:C.border,margin:"12px 0"}}/>
         <div style={{textAlign:"center",padding:"10px",background:passed?C.ok+"12":C.danger+"12",border:`1px solid ${passed?C.ok+"44":C.danger+"44"}`,borderRadius:8}}>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,color:passed?C.ok:C.danger,letterSpacing:2}}>{passed?"✓  KPI PASSED":"✗  KPI MISSED"}</div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:14,color:passed?C.ok:C.danger,letterSpacing:2}}>{passed?"✓  KPI PASSED":"✗  KPI MISSED"}</div>
         </div>
       </div>
       <div style={{marginBottom:10}}><label style={S.lbl}>บันทึก / ปัญหา</label><textarea style={{...S.inp,minHeight:68,resize:"vertical"}} value={entry.note||""} onChange={e=>setEntry({...entry,note:e.target.value})} placeholder="บันทึกข้อคิดเห็น..."/></div>
@@ -754,73 +767,73 @@ function FinanceView({orders}){
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
         <button onClick={()=>navM(-1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"5px 12px",cursor:"pointer"}}>‹</button>
-        <span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:16,color:C.text}}>{MONTHS_TH[sm]} {sy}</span>
+        <span style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:16,color:C.text}}>{MONTHS_TH[sm]} {sy}</span>
         <button onClick={()=>navM(1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"5px 12px",cursor:"pointer"}}>›</button>
       </div>
       <div style={{display:"flex",gap:0,borderBottom:`1px solid ${C.border}`,marginBottom:12,overflowX:"auto"}}>
-        {["overview","expenses","products"].map(t=><button key={t} onClick={()=>setTab(t)} style={{padding:"7px 14px 7px 0",background:"none",border:"none",borderBottom:`2px solid ${tab===t?C.accent:"transparent"}`,color:tab===t?C.accent:C.muted,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:10,letterSpacing:1,cursor:"pointer",whiteSpace:"nowrap",marginBottom:-1}}>{t.toUpperCase()}</button>)}
+        {["overview","expenses","products"].map(t=><button key={t} onClick={()=>setTab(t)} style={{padding:"7px 14px 7px 0",background:"none",border:"none",borderBottom:`2px solid ${tab===t?C.accent:"transparent"}`,color:tab===t?C.accent:C.muted,fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:10,letterSpacing:1,cursor:"pointer",whiteSpace:"nowrap",marginBottom:-1}}>{t.toUpperCase()}</button>)}
       </div>
       {tab==="overview"&&(
         <div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
-            {[{l:"รายรับ",v:totalRev,c:C.accent},{l:"รายจ่าย",v:totalExp,c:C.danger},{l:"กำไร",v:net,c:net>=0?C.ok:C.danger}].map(({l,v,c})=><div key={l} style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`2px solid ${c}`,borderRadius:8,padding:"12px",textAlign:"center"}}><div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:18,color:c}}>฿{fmt(Math.abs(v))}</div><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif",marginTop:2}}>{l}</div></div>)}
+            {[{l:"รายรับ",v:totalRev,c:C.accent},{l:"รายจ่าย",v:totalExp,c:C.danger},{l:"กำไร",v:net,c:net>=0?C.ok:C.danger}].map(({l,v,c})=><div key={l} style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`2px solid ${c}`,borderRadius:8,padding:"12px",textAlign:"center"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:18,color:c}}>฿{fmt(Math.abs(v))}</div><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace",marginTop:2}}>{l}</div></div>)}
           </div>
         </div>
       )}
       {tab==="expenses"&&(
         <div>
           <div style={S.card}>
-            <div style={{fontSize:10,color:C.danger,fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:1,marginBottom:8}}>เพิ่มรายจ่าย</div>
+            <div style={{fontSize:10,color:C.danger,fontFamily:"'DM Mono',monospace",fontWeight:600,letterSpacing:1,marginBottom:8}}>เพิ่มรายจ่าย</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
               <div><label style={S.lbl}>หมวด</label><select style={S.inp} value={newExp.cat} onChange={e=>setNewExp(n=>({...n,cat:e.target.value}))}>{CATS.map(c=><option key={c}>{c}</option>)}</select></div>
               <div><label style={S.lbl}>รายละเอียด</label><input style={S.inp} value={newExp.label} onChange={e=>setNewExp(n=>({...n,label:e.target.value}))}/></div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8}}>
               <div><label style={S.lbl}>จำนวน (฿)</label><input type="number" style={S.inp} value={newExp.amount} onChange={e=>setNewExp(n=>({...n,amount:e.target.value}))}/></div>
-              <div style={{display:"flex",alignItems:"flex-end"}}><button onClick={()=>{ if(!newExp.amount)return; saveExp([...mExp,{id:Date.now(),cat:newExp.cat,label:newExp.label||newExp.cat,amount:Number(newExp.amount)}]); setNewExp({cat:"อุปกรณ์",label:"",amount:""}); }} style={{background:C.danger,color:"#fff",border:"none",borderRadius:6,padding:"8px 14px",fontSize:12,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>ADD</button></div>
+              <div style={{display:"flex",alignItems:"flex-end"}}><button onClick={()=>{ if(!newExp.amount)return; saveExp([...mExp,{id:Date.now(),cat:newExp.cat,label:newExp.label||newExp.cat,amount:Number(newExp.amount)}]); setNewExp({cat:"อุปกรณ์",label:"",amount:""}); }} style={{background:C.danger,color:"#fff",border:"none",borderRadius:6,padding:"8px 14px",fontSize:12,fontFamily:"'DM Mono',monospace",cursor:"pointer"}}>ADD</button></div>
             </div>
           </div>
           <div style={S.card}>
-            <div style={{fontSize:10,color:C.danger,fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:1,marginBottom:8}}>รายจ่าย — ฿{fmt(totalExp)}</div>
-            {mExp.map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:`1px solid ${C.border}`}}><div><div style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:C.text}}>{e.label}</div><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>{e.cat}</div></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,color:C.danger}}>฿{fmt(e.amount)}</span><button onClick={()=>saveExp(mExp.filter(x=>x.id!==e.id))} style={{background:"none",border:"none",color:C.muted,cursor:"pointer"}}>✕</button></div></div>)}
+            <div style={{fontSize:10,color:C.danger,fontFamily:"'DM Mono',monospace",fontWeight:600,letterSpacing:1,marginBottom:8}}>รายจ่าย — ฿{fmt(totalExp)}</div>
+            {mExp.map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:`1px solid ${C.border}`}}><div><div style={{fontFamily:"'Syne',sans-serif",fontSize:13,color:C.text}}>{e.label}</div><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace"}}>{e.cat}</div></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'DM Mono',monospace",fontWeight:600,color:C.danger}}>฿{fmt(e.amount)}</span><button onClick={()=>saveExp(mExp.filter(x=>x.id!==e.id))} style={{background:"none",border:"none",color:C.muted,cursor:"pointer"}}>✕</button></div></div>)}
           </div>
         </div>
       )}
       {tab==="products"&&(
         <div>
           <div style={S.card}>
-            <div style={{fontSize:10,color:"#8BA7C7",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:1,marginBottom:8}}>เพิ่มสินค้า</div>
+            <div style={{fontSize:10,color:"#8BA7C7",fontFamily:"'DM Mono',monospace",fontWeight:600,letterSpacing:1,marginBottom:8}}>เพิ่มสินค้า</div>
             <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}>
-              {PROD_CATS.map(c=><button key={c.key} onClick={()=>setNewProd(n=>({...n,cat:c.key}))} style={{padding:"4px 8px",background:newProd.cat===c.key?c.color+"20":"transparent",color:newProd.cat===c.key?c.color:C.muted,border:`1px solid ${newProd.cat===c.key?c.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Sans',sans-serif",fontSize:10,cursor:"pointer"}}>{c.label}</button>)}
+              {PROD_CATS.map(c=><button key={c.key} onClick={()=>setNewProd(n=>({...n,cat:c.key}))} style={{padding:"4px 8px",background:newProd.cat===c.key?c.color+"20":"transparent",color:newProd.cat===c.key?c.color:C.muted,border:`1px solid ${newProd.cat===c.key?c.color+"55":C.border}`,borderRadius:5,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer"}}>{c.label}</button>)}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr auto",gap:8}}>
               <div><label style={S.lbl}>ชื่อสินค้า</label><input style={S.inp} value={newProd.name} onChange={e=>setNewProd(n=>({...n,name:e.target.value}))}/></div>
               <div><label style={S.lbl}>ราคา</label><input type="number" style={S.inp} value={newProd.price} onChange={e=>setNewProd(n=>({...n,price:e.target.value}))}/></div>
               <div><label style={S.lbl}>Stock</label><input type="number" style={S.inp} value={newProd.stock} onChange={e=>setNewProd(n=>({...n,stock:e.target.value}))}/></div>
-              <div style={{display:"flex",alignItems:"flex-end"}}><button onClick={()=>{ if(!newProd.name||!newProd.price)return; const n=[...prods,{id:Date.now(),name:newProd.name,price:Number(newProd.price),stock:Number(newProd.stock)||0,cat:newProd.cat}]; setProds(n); save("cit-products",n); setNewProd({name:"",price:"",stock:"",cat:newProd.cat}); }} style={{background:"#8BA7C7",color:C.bg,border:"none",borderRadius:6,padding:"8px 12px",fontSize:12,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>ADD</button></div>
+              <div style={{display:"flex",alignItems:"flex-end"}}><button onClick={()=>{ if(!newProd.name||!newProd.price)return; const n=[...prods,{id:Date.now(),name:newProd.name,price:Number(newProd.price),stock:Number(newProd.stock)||0,cat:newProd.cat}]; setProds(n); save("cit-products",n); setNewProd({name:"",price:"",stock:"",cat:newProd.cat}); }} style={{background:"#8BA7C7",color:C.bg,border:"none",borderRadius:6,padding:"8px 12px",fontSize:12,fontFamily:"'DM Mono',monospace",cursor:"pointer"}}>ADD</button></div>
             </div>
           </div>
           {PROD_CATS.map(cat=>{ const cp=prods.filter(p=>p.cat===cat.key); if(!cp.length)return null; return(
             <div key={cat.key} style={{background:C.surface,border:`1px solid ${cat.color}33`,borderLeft:`3px solid ${cat.color}`,borderRadius:10,padding:14,marginBottom:12}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:11,color:cat.color,letterSpacing:1,marginBottom:10}}>{cat.label}</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:11,color:cat.color,letterSpacing:1,marginBottom:10}}>{cat.label}</div>
               {cp.map(p=>{ const qty=mSales[p.id]||0; const left=Math.max(0,(p.stock||0)-qty); const lc=left===0?C.danger:left<=3?"#C7B98B":C.ok; return(
                 <div key={p.id} style={{background:C.bg,borderRadius:8,padding:"10px 12px",marginBottom:8,border:`1px solid ${C.border}`}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div><div style={{fontFamily:"'Inter',sans-serif",fontSize:14,color:C.text,fontWeight:600}}>{p.name}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>฿{fmt(p.price)}/ชิ้น {p.stock>0&&`· เหลือ ${left}/${p.stock}`}</div></div><button onClick={()=>{ const n=prods.filter(x=>x.id!==p.id); setProds(n); save("cit-products",n); }} style={{background:"none",border:"none",color:C.muted,cursor:"pointer"}}>✕</button></div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div><div style={{fontFamily:"'Syne',sans-serif",fontSize:14,color:C.text,fontWeight:600}}>{p.name}</div><div style={{fontSize:10,color:C.muted,fontFamily:"'DM Mono',monospace"}}>฿{fmt(p.price)}/ชิ้น {p.stock>0&&`· เหลือ ${left}/${p.stock}`}</div></div><button onClick={()=>{ const n=prods.filter(x=>x.id!==p.id); setProds(n); save("cit-products",n); }} style={{background:"none",border:"none",color:C.muted,cursor:"pointer"}}>✕</button></div>
                   {p.stock>0&&<div style={{marginBottom:8}}><div style={{height:3,background:C.border,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:`${(left/p.stock)*100}%`,background:lc,borderRadius:2}}/></div></div>}
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                     <div style={{display:"flex",alignItems:"center",gap:6}}>
-                      <span style={{fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>ขาย</span>
+                      <span style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace"}}>ขาย</span>
                       <button onClick={()=>saveSales({...mSales,[p.id]:Math.max(0,qty-1)})} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:4,width:24,height:24,cursor:"pointer"}}>−</button>
-                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:16,color:C.text,minWidth:20,textAlign:"center"}}>{qty}</span>
+                      <span style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:C.text,minWidth:20,textAlign:"center"}}>{qty}</span>
                       <button onClick={()=>saveSales({...mSales,[p.id]:qty+1})} style={{background:cat.color,border:"none",color:C.bg,borderRadius:4,width:24,height:24,cursor:"pointer",fontWeight:700}}>+</button>
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:4}}>
                       <span style={{fontSize:9,color:C.muted}}>Stock</span>
                       <button onClick={()=>{ const n=prods.map(x=>x.id===p.id?{...x,stock:Math.max(0,(x.stock||0)-1)}:x); setProds(n); save("cit-products",n); }} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:4,width:22,height:22,cursor:"pointer",fontSize:10}}>−</button>
-                      <span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,color:lc,minWidth:18,textAlign:"center"}}>{p.stock||0}</span>
+                      <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:12,color:lc,minWidth:18,textAlign:"center"}}>{p.stock||0}</span>
                       <button onClick={()=>{ const n=prods.map(x=>x.id===p.id?{...x,stock:(x.stock||0)+1}:x); setProds(n); save("cit-products",n); }} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:4,width:22,height:22,cursor:"pointer",fontSize:10}}>+</button>
                     </div>
-                    <span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,color:cat.color}}>฿{fmt(p.price*qty)}</span>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:12,color:cat.color}}>฿{fmt(p.price*qty)}</span>
                   </div>
                 </div>
               ); })}
@@ -842,21 +855,21 @@ function Dashboard({orders,kpiLogs,workPlans}){
   return(
     <div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
-        {[{l:"รายรับรวม",v:`฿${fmt(totalRev)}`,c:C.accent},{l:"ยอดค้างรับ",v:`฿${fmt(totalOwed)}`,c:C.danger},{l:"ออเดอร์ทั้งหมด",v:orders.length,c:"#8BA7C7"},{l:"IN PROGRESS",v:orders.filter(o=>o.status==="inprogress").length,c:C.ok}].map(({l,v,c})=><div key={l} style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`2px solid ${c}`,borderRadius:8,padding:"12px",textAlign:"center"}}><div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:18,color:c}}>{v}</div><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Sans',sans-serif",marginTop:2}}>{l}</div></div>)}
+        {[{l:"รายรับรวม",v:`฿${fmt(totalRev)}`,c:C.accent},{l:"ยอดค้างรับ",v:`฿${fmt(totalOwed)}`,c:C.danger},{l:"ออเดอร์ทั้งหมด",v:orders.length,c:"#8BA7C7"},{l:"IN PROGRESS",v:orders.filter(o=>o.status==="inprogress").length,c:C.ok}].map(({l,v,c})=><div key={l} style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`2px solid ${c}`,borderRadius:8,padding:"12px",textAlign:"center"}}><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:18,color:c}}>{v}</div><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace",marginTop:2}}>{l}</div></div>)}
       </div>
       <div style={S.card}>
-        <div style={{fontSize:10,color:C.accent,fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:1,marginBottom:10}}>KPI 7 วันล่าสุด</div>
-        {mStats.map(({m,pass,total,rate})=><div key={m} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:C.muted}}>{m}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,color:rate===null?C.muted:rate>=80?C.ok:rate>=50?"#C7B98B":C.danger}}>{rate===null?"ไม่มีข้อมูล":`${pass}/${total} (${rate}%)`}</span></div>{rate!==null&&<MiniBar pct={rate} color={rate>=80?C.ok:rate>=50?"#C7B98B":C.danger}/>}</div>)}
+        <div style={{fontSize:10,color:C.accent,fontFamily:"'DM Mono',monospace",fontWeight:600,letterSpacing:1,marginBottom:10}}>KPI 7 วันล่าสุด</div>
+        {mStats.map(({m,pass,total,rate})=><div key={m} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:C.muted}}>{m}</span><span style={{fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:12,color:rate===null?C.muted:rate>=80?C.ok:rate>=50?"#C7B98B":C.danger}}>{rate===null?"ไม่มีข้อมูล":`${pass}/${total} (${rate}%)`}</span></div>{rate!==null&&<MiniBar pct={rate} color={rate>=80?C.ok:rate>=50?"#C7B98B":C.danger}/>}</div>)}
       </div>
       {platStats.length>0&&<div style={S.card}>
-        <div style={{fontSize:10,color:C.accent,fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:1,marginBottom:10}}>แหล่งที่มาลูกค้า</div>
+        <div style={{fontSize:10,color:C.accent,fontFamily:"'DM Mono',monospace",fontWeight:600,letterSpacing:1,marginBottom:10}}>แหล่งที่มาลูกค้า</div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {platStats.map(p=><div key={p.key} style={{flex:1,minWidth:60,background:C.bg,border:`1px solid ${p.color}33`,borderRadius:8,padding:"8px",textAlign:"center"}}><div style={{fontSize:16}}>{p.icon}</div><div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:16,color:p.color}}>{p.count}</div><div style={{fontSize:8,color:C.muted,fontFamily:"'DM Sans',sans-serif"}}>{p.label}</div></div>)}
+          {platStats.map(p=><div key={p.key} style={{flex:1,minWidth:60,background:C.bg,border:`1px solid ${p.color}33`,borderRadius:8,padding:"8px",textAlign:"center"}}><div style={{fontSize:16}}>{p.icon}</div><div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:p.color}}>{p.count}</div><div style={{fontSize:8,color:C.muted,fontFamily:"'DM Mono',monospace"}}>{p.label}</div></div>)}
         </div>
       </div>}
       <div style={S.card}>
-        <div style={{fontSize:10,color:C.danger,fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:1,marginBottom:8}}>ยังค้างชำระ</div>
-        {orders.filter(o=>!o.fullPaid&&(o.price||0)>(o.deposit||0)).length===0?<div style={{color:C.muted,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>ไม่มีค้างชำระ ✓</div>:orders.filter(o=>!o.fullPaid&&(o.price||0)>(o.deposit||0)).map(o=><div key={o.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:`1px solid ${C.border}`}}><span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{o.customer}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,color:C.danger}}>฿{fmt((o.price||0)-(o.deposit||0))}</span></div>)}
+        <div style={{fontSize:10,color:C.danger,fontFamily:"'DM Mono',monospace",fontWeight:600,letterSpacing:1,marginBottom:8}}>ยังค้างชำระ</div>
+        {orders.filter(o=>!o.fullPaid&&(o.price||0)>(o.deposit||0)).length===0?<div style={{color:C.muted,fontSize:12,fontFamily:"'DM Mono',monospace"}}>ไม่มีค้างชำระ ✓</div>:orders.filter(o=>!o.fullPaid&&(o.price||0)>(o.deposit||0)).map(o=><div key={o.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:`1px solid ${C.border}`}}><span style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{o.customer}</span><span style={{fontFamily:"'DM Mono',monospace",fontWeight:600,color:C.danger}}>฿{fmt((o.price||0)-(o.deposit||0))}</span></div>)}
       </div>
     </div>
   );
@@ -871,19 +884,19 @@ function Login({onBoss,onTeam}){
       <link href={FONTS} rel="stylesheet"/>
       <div style={{width:"100%",maxWidth:320}}>
         <div style={{textAlign:"center",marginBottom:48}}>
-          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:28,letterSpacing:8,color:C.text}}>CUSTOMIT</div>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,letterSpacing:6,color:C.muted,marginTop:2}}>THAILAND</div>
-          <div style={{width:32,height:1,background:C.accent,margin:"14px auto"}}/>
+          <div style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:32,letterSpacing:6,color:C.text,letterSpacing:-1}}>CUSTOMIT</div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:4,color:C.muted,marginTop:4}}>TH // WORKSHOP OS</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,justifyContent:"center",marginTop:8}}><div style={{width:6,height:6,borderRadius:"50%",background:C.ok}}/><span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:C.ok,letterSpacing:2}}>ONLINE</span></div>
         </div>
-        <div style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`1px solid ${C.accent}`,borderRadius:10,padding:20,marginBottom:10}}>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:10,letterSpacing:3,color:C.accent,marginBottom:14}}>SMALLBRUSH ACCESS</div>
+        <div style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`2px solid ${C.accent}`,borderRadius:12,padding:20,marginBottom:10}}>
+          <div style={{fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:10,letterSpacing:3,color:C.accent,marginBottom:14}}>SMALLBRUSH ACCESS</div>
           <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&tryBoss()} placeholder="รหัสผ่าน" style={{...S.inp,marginBottom:10,border:`1px solid ${err?C.danger:C.border}`}} autoComplete="off"/>
-          {err&&<div style={{fontSize:10,color:C.danger,fontFamily:"'DM Sans',sans-serif",marginBottom:8,textAlign:"center"}}>รหัสผิด</div>}
-          <button onClick={tryBoss} style={{width:"100%",background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:11,fontSize:12,fontFamily:"'DM Sans',sans-serif",fontWeight:700,letterSpacing:3,cursor:"pointer"}}>ENTER</button>
+          {err&&<div style={{fontSize:10,color:C.danger,fontFamily:"'DM Mono',monospace",marginBottom:8,textAlign:"center"}}>รหัสผิด</div>}
+          <button onClick={tryBoss} style={{width:"100%",background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:11,fontSize:12,fontFamily:"'DM Mono',monospace",fontWeight:700,letterSpacing:3,cursor:"pointer"}}>ENTER</button>
         </div>
         <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:20}}>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:10,letterSpacing:3,color:C.muted,marginBottom:14}}>TEAM ACCESS</div>
-          <button onClick={onTeam} style={{width:"100%",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,padding:11,fontSize:12,fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:3,cursor:"pointer"}}>ENTER AS TEAM</button>
+          <div style={{fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:10,letterSpacing:3,color:C.muted,marginBottom:14}}>TEAM ACCESS</div>
+          <button onClick={onTeam} style={{width:"100%",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,padding:11,fontSize:12,fontFamily:"'DM Mono',monospace",fontWeight:600,letterSpacing:3,cursor:"pointer"}}>ENTER AS TEAM</button>
         </div>
       </div>
     </div>
@@ -951,29 +964,29 @@ export default function App(){
     <div style={{minHeight:"100vh",background:C.bg,color:C.text}}>
       <link href={FONTS} rel="stylesheet"/>
       {/* Topbar */}
-      <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 16px",display:"flex",alignItems:"center",justifyContent:"space-between",height:52,position:"sticky",top:0,zIndex:50}}>
+      <div style={{background:"#0e1014",borderBottom:`1px solid ${C.border}`,padding:"0 16px",display:"flex",alignItems:"center",justifyContent:"space-between",height:52,position:"sticky",top:0,zIndex:50}}>
         <div style={{display:"flex",alignItems:"baseline",gap:8}}>
-          <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:18,letterSpacing:4,color:C.text}}>CUSTOMIT</span>
-          <span style={{fontSize:8,color:C.muted,fontFamily:"'DM Sans',sans-serif",letterSpacing:2}}>TH</span>
-          {isBoss&&<span style={{fontSize:8,color:C.accent,background:C.accent+"15",borderRadius:3,padding:"1px 6px",fontFamily:"'DM Sans',sans-serif",letterSpacing:1}}>SMALLBRUSH</span>}
+          <span style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:18,letterSpacing:-0.5,color:C.text}}>CUSTOMIT</span>
+          <span style={{fontSize:8,color:C.muted,fontFamily:"'DM Mono',monospace",letterSpacing:2}}>TH</span>
+          {isBoss&&<span style={{fontSize:8,color:C.accent,background:C.accent+"20",borderRadius:4,padding:"2px 8px",fontFamily:"'DM Mono',monospace",letterSpacing:1,border:`1px solid ${C.accent}40`}}>SMALLBRUSH</span>}
         </div>
         <div style={{display:"flex",gap:8}}>
-          {isBoss&&<button onClick={()=>setShowAdd(true)} style={{background:C.accent,color:C.bg,border:"none",borderRadius:6,padding:"6px 14px",fontSize:11,fontFamily:"'DM Sans',sans-serif",fontWeight:700,letterSpacing:2,cursor:"pointer"}}>+ NEW</button>}
-          <button onClick={()=>setRole(null)} style={{background:"none",border:`1px solid ${C.border}`,borderRadius:5,color:C.muted,fontSize:10,padding:"5px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>EXIT</button>
+          {isBoss&&<button onClick={()=>setShowAdd(true)} style={{background:C.accent,color:"#fff",border:"none",borderRadius:6,padding:"6px 14px",fontSize:11,fontFamily:"'Syne',sans-serif",fontWeight:700,letterSpacing:1,cursor:"pointer"}}>+ NEW</button>}
+          <button onClick={()=>setRole(null)} style={{background:"none",border:`1px solid ${C.border}`,borderRadius:5,color:C.muted,fontSize:10,padding:"5px 10px",cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>EXIT</button>
         </div>
       </div>
       {/* Status bar */}
       <div style={{display:"flex",borderBottom:`1px solid ${C.border}`,overflowX:"auto"}}>
         {[{key:"all",label:"ALL",color:C.text,count:orders.length},...STATUSES.map(s=>({...s,count:counts[s.key]||0}))].map(s=>(
           <button key={s.key} onClick={()=>setFilterStatus(s.key)} style={{flex:1,minWidth:50,padding:"8px 4px",background:"transparent",border:"none",borderBottom:`2px solid ${filterStatus===s.key?s.color:"transparent"}`,cursor:"pointer"}}>
-            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:16,color:filterStatus===s.key?s.color:C.muted}}>{s.count}</div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:7,letterSpacing:1,color:filterStatus===s.key?s.color:C.muted,opacity:filterStatus===s.key?1:0.5}}>{s.label}</div>
+            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:16,color:filterStatus===s.key?s.color:C.muted}}>{s.count}</div>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:7,letterSpacing:1,color:filterStatus===s.key?s.color:C.muted,opacity:filterStatus===s.key?1:0.5}}>{s.label}</div>
           </button>
         ))}
       </div>
       {/* Tabs */}
       <div style={{display:"flex",borderBottom:`1px solid ${C.border}`,padding:"0 16px",overflowX:"auto",background:C.surface}}>
-        {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{padding:"9px 14px 9px 0",background:"none",border:"none",borderBottom:`2px solid ${tab===t.k?C.accent:"transparent"}`,color:tab===t.k?C.accent:C.muted,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:10,letterSpacing:1,cursor:"pointer",marginBottom:-1,whiteSpace:"nowrap"}}>{t.l}</button>)}
+        {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{padding:"9px 14px 9px 0",background:"none",border:"none",borderBottom:`2px solid ${tab===t.k?C.accent:"transparent"}`,color:tab===t.k?C.accent:C.muted,fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:10,letterSpacing:1,cursor:"pointer",marginBottom:-1,whiteSpace:"nowrap"}}>{t.l}</button>)}
       </div>
       {/* Content */}
       <div style={{padding:"14px 16px 80px"}}>
@@ -984,17 +997,17 @@ export default function App(){
               <div key={st.key} style={{marginBottom:20}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
                   <div style={{width:6,height:6,borderRadius:"50%",background:st.color}}/>
-                  <span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:10,letterSpacing:2,color:st.color}}>{st.label}</span>
-                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:C.muted}}>({group.length})</span>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:10,letterSpacing:2,color:st.color}}>{st.label}</span>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:C.muted}}>({group.length})</span>
                   <div style={{flex:1,height:1,background:st.color+"22"}}/>
                 </div>
                 {group.map(o=><OrderCard key={o.id} order={o} onUpdate={upd} onDelete={del} isBoss={isBoss}/>)}
               </div>
             ); })}
-            {filtered.length===0&&<div style={{textAlign:"center",color:C.muted,padding:60,fontFamily:"'DM Sans',sans-serif",letterSpacing:2,fontSize:12}}>NO ORDERS</div>}
+            {filtered.length===0&&<div style={{textAlign:"center",color:C.muted,padding:60,fontFamily:"'DM Mono',monospace",letterSpacing:2,fontSize:12}}>NO ORDERS</div>}
           </>
         )}
-        {tab==="calendar"&&<CalView orders={orders} workPlans={workPlans} workSchedules={workSchedules} shopEvents={shopEvents}/>}
+        {tab==="calendar"&&<CalView orders={orders} workPlans={workPlans} workSchedules={workSchedules} shopEvents={shopEvents} kpiLogs={kpiLogs} isBoss={isBoss}/>}
         {tab==="kpi"&&<KpiTracker isBoss={isBoss} workPlans={workPlans} orders={orders} setOrders={upd_orders=>{ setOrders(upd_orders); save("cit-orders-v3",upd_orders); fsSet("cit-orders-v3",upd_orders); }}/>}
         {tab==="planner"&&isBoss&&<WorkPlanner workPlans={workPlans} setWorkPlans={setWorkPlans} workSchedules={workSchedules} setWorkSchedules={setWorkSchedules} shopEvents={shopEvents} setShopEvents={setShopEvents} orders={orders}/>}
         {tab==="finance"&&isBoss&&<FinanceView orders={orders}/>}
