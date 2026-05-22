@@ -651,11 +651,11 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orde
 
   const addSchedule=()=>{
     if(!newSched.orderId||!newSched.startDate) return;
-    setWorkSchedules(s=>[...s,{id:Date.now(),...newSched,days:Number(newSched.days)||1}]);
+    setWorkSchedules(s=>{ const next=[...s,{id:Date.now(),...newSched,days:Number(newSched.days)||1}]; saveData("cit-work-schedules",next); fsSet("cit-work-schedules",next); return next; });
     setShowAddSchedule(false);
     setNewSched({orderId:"",startDate:todayKey(),days:1,assignee:TEAM[0]});
   };
-  const delSchedule=id=>setWorkSchedules(s=>s.filter(x=>x.id!==id));
+  const delSchedule=id=>setWorkSchedules(s=>{ const next=s.filter(x=>x.id!==id); saveData("cit-work-schedules",next); fsSet("cit-work-schedules",next); return next; });
 
   // Get dates covered by a schedule
   function schedDates(s){
@@ -677,13 +677,13 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orde
   const [newEvent,setNewEvent]=useState({type:"booth",title:"",date:todayKey(),endDate:"",note:""});
   const addEvent=()=>{
     if(!newEvent.date) return;
-    setShopEvents(e=>[...e,{id:Date.now(),...newEvent}]);
+    setShopEvents(e=>{ const next=[...e,{id:Date.now(),...newEvent}]; saveData("cit-shop-events",next); fsSet("cit-shop-events",next); return next; });
     setShowAddEvent(false);
     setNewEvent({type:"booth",title:"",date:todayKey(),endDate:"",note:""});
   };
-  const delEvent=id=>setShopEvents(e=>e.filter(x=>x.id!==id));
+  const delEvent=id=>setShopEvents(e=>{ const next=e.filter(x=>x.id!==id); saveData("cit-shop-events",next); fsSet("cit-shop-events",next); return next; });
   const set=(dk,member,dayType)=>{
-    setWorkPlans(p=>{ const cur=p[dk]||{}; const updated=dayType?{...cur,[member]:dayType}:{...cur}; if(!dayType)delete updated[member]; return {...p,[dk]:updated}; });
+    setWorkPlans(p=>{ const cur=p[dk]||{}; const updated={...cur}; if(dayType) updated[member]=dayType; else delete updated[member]; const next={...p,[dk]:updated}; saveData("cit-work-plans",next); fsSet("cit-work-plans",next); return next; });
   };
   const applyAll=(dk,dayType)=>{ TEAM.forEach(m=>set(dk,m,dayType)); };
   // Selected day for detail panel
@@ -743,40 +743,84 @@ function WorkPlanner({workPlans,setWorkPlans,workSchedules,setWorkSchedules,orde
         })}
       </div>
 
-      <div style={{fontFamily:"'DM Sans', sans-serif",fontSize:9,color:C.muted,letterSpacing:1,marginBottom:10}}>กำหนดแผนงานรายวัน — พนักงานเห็นใน Calendar</div>
-      {days.map(wd=>{
-        const dk=wd.toISOString().slice(0,10);
-        const dayPlan=workPlans[dk]||{};
-        const isToday=dk===todayKey();
-        const isPast=wd<new Date(new Date().setHours(0,0,0,0));
-        const dow=["อา","จ","อ","พ","พฤ","ศ","ส"][wd.getDay()];
+      {/* Calendar Grid */}
+      <div style={{...S.card,marginBottom:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
+          {["อา","จ","อ","พ","พฤ","ศ","ส"].map(d=><div key={d} style={{textAlign:"center",fontSize:9,color:C.muted,fontFamily:"'DM Sans', sans-serif",padding:"2px 0"}}>{d}</div>)}
+        </div>
+        {(()=>{
+          const firstDay=new Date(planYear,planMonth,1).getDay();
+          const dim=new Date(planYear,planMonth+1,0).getDate();
+          const cells=Array(firstDay).fill(null).concat(Array.from({length:dim},(_,i)=>i+1));
+          while(cells.length%7!==0)cells.push(null);
+          const weeks=[];for(let i=0;i<cells.length;i+=7)weeks.push(cells.slice(i,i+7));
+          return weeks.map((wk,wi)=>(
+            <div key={wi} style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:2}}>
+              {wk.map((day,di)=>{
+                const dk=day?`${planYear}-${String(planMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`:null;
+                const dayPlan=dk?workPlans[dk]||{}:{};
+                const isToday=dk===todayKey();
+                const isSel=dk===selDay;
+                const types=[...new Set(Object.values(dayPlan))];
+                const mainDt=types.length>0?DAY_TYPES.find(d=>d.key===types[0]):null;
+                const hasEvent=(shopEvents||[]).some(e=>dk&&dk>=e.date&&dk<=(e.endDate||e.date));
+                return(
+                  <div key={di} onClick={()=>dk&&setSelDay(isSel?null:dk)}
+                    style={{minHeight:44,background:day?(isSel?C.surface:isToday?"#1c1000":C.bg):"transparent",borderRadius:5,padding:"3px",border:isSel?`1px solid ${C.accent}`:isToday?`1px solid ${C.accent}44`:`1px solid transparent`,cursor:day?"pointer":"default"}}>
+                    {day&&<div style={{fontSize:9,color:isSel?C.accent:isToday?C.accent:C.muted,fontFamily:"'Inter', sans-serif",fontWeight:isSel||isToday?700:400,marginBottom:2}}>{day}</div>}
+                    {mainDt&&<div style={{height:3,background:mainDt.color,borderRadius:1,marginBottom:2}}/>}
+                    {types.length>0&&<div style={{display:"flex",gap:1,flexWrap:"wrap"}}>
+                      {types.map(t=>{ const dt2=DAY_TYPES.find(d=>d.key===t); return dt2?<div key={t} style={{width:5,height:5,borderRadius:"50%",background:dt2.color}}/>:null; })}
+                    </div>}
+                    {hasEvent&&<div style={{fontSize:6,marginTop:1}}>📌</div>}
+                  </div>
+                );
+              })}
+            </div>
+          ));
+        })()}
+      </div>
+
+      {/* Day Detail Panel */}
+      {selDay&&(()=>{
+        const dayPlan=workPlans[selDay]||{};
+        const d=new Date(selDay+"T00:00:00");
+        const dow=["อา","จ","อ","พ","พฤ","ศ","ส"][d.getDay()];
+        const dayEvents=(shopEvents||[]).filter(e=>selDay>=e.date&&selDay<=(e.endDate||e.date));
         return(
-          <div key={dk} style={{background:isToday?C.surface:C.bg,border:`1px solid ${isToday?C.accent+"44":C.border}`,borderRadius:8,padding:"10px 12px",marginBottom:6,opacity:isPast?0.5:1}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-              <span style={{fontFamily:"'Inter', sans-serif",fontWeight:600,fontSize:14,color:isToday?C.accent:C.text}}>
-                {dow} {wd.getDate()} {MONTHS_TH[wd.getMonth()]}
-                {isToday&&<span style={{fontFamily:"'DM Sans', sans-serif",fontSize:8,color:C.accent,letterSpacing:2,marginLeft:8}}>TODAY</span>}
-              </span>
+          <div style={{...S.card,border:`1px solid ${C.accent}44`,marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div>
+                <span style={{fontFamily:"'Inter', sans-serif",fontWeight:700,fontSize:15,color:selDay===todayKey()?C.accent:C.text}}>
+                  {dow} {d.getDate()} {MONTHS_TH[d.getMonth()]} {d.getFullYear()}
+                </span>
+                {selDay===todayKey()&&<span style={{fontFamily:"'DM Sans', sans-serif",fontSize:9,color:C.accent,marginLeft:8,letterSpacing:1}}>TODAY</span>}
+              </div>
               <div style={{display:"flex",gap:4}}>
-                {DAY_TYPES.map(dt=>(<button key={dt.key} onClick={()=>applyAll(dk,dt.key)} style={{fontSize:7,letterSpacing:1,background:dt.color+"15",color:dt.color,border:`1px solid ${dt.color}30`,borderRadius:3,padding:"2px 6px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif"}}>{dt.short}</button>))}
-                <button onClick={()=>applyAll(dk,null)} style={{fontSize:7,background:C.surface,color:C.muted,border:`1px solid ${C.border}`,borderRadius:3,padding:"2px 6px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif"}}>CLR</button>
+                {DAY_TYPES.map(dt=>(<button key={dt.key} onClick={()=>applyAll(selDay,dt.key)} style={{fontSize:9,background:dt.color+"15",color:dt.color,border:`1px solid ${dt.color}30`,borderRadius:4,padding:"3px 8px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif",fontWeight:600}}>{dt.short}</button>))}
+                <button onClick={()=>applyAll(selDay,null)} style={{fontSize:9,background:C.surface,color:C.muted,border:`1px solid ${C.border}`,borderRadius:4,padding:"3px 8px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif"}}>CLR</button>
               </div>
             </div>
             {TEAM.map(m=>{
               const cur=dayPlan[m];
               return(
-                <div key={m} style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
-                  <span style={{fontFamily:"'DM Sans', sans-serif",fontSize:11,color:C.muted,minWidth:80}}>{m}</span>
-                  <div style={{display:"flex",gap:4,flex:1}}>
-                    {DAY_TYPES.map(dt=>(<button key={dt.key} onClick={()=>set(dk,m,cur===dt.key?null:dt.key)} style={{flex:1,padding:"5px 2px",background:cur===dt.key?dt.color+"25":"transparent",color:cur===dt.key?dt.color:C.muted,border:`1px solid ${cur===dt.key?dt.color+"60":C.border}`,borderRadius:5,fontFamily:"'DM Sans', sans-serif",fontWeight:600,fontSize:9,letterSpacing:1,cursor:"pointer",transition:"all 0.15s"}}>{dt.short}</button>))}
-                    {cur&&<button onClick={()=>set(dk,m,null)} style={{padding:"5px 7px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:5,fontSize:9,cursor:"pointer"}}>✕</button>}
+                <div key={m} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                  <span style={{fontFamily:"'DM Sans', sans-serif",fontSize:12,color:C.muted,minWidth:90,fontWeight:500}}>{m}</span>
+                  <div style={{display:"flex",gap:5,flex:1}}>
+                    {DAY_TYPES.map(dt=>(<button key={dt.key} onClick={()=>set(selDay,m,cur===dt.key?null:dt.key)} style={{flex:1,padding:"6px 2px",background:cur===dt.key?dt.color+"25":"transparent",color:cur===dt.key?dt.color:C.muted,border:`1px solid ${cur===dt.key?dt.color+"60":C.border}`,borderRadius:6,fontFamily:"'DM Sans', sans-serif",fontWeight:600,fontSize:10,cursor:"pointer",transition:"all 0.15s"}}>{dt.short}</button>))}
+                    {cur&&<button onClick={()=>set(selDay,m,null)} style={{padding:"6px 8px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:6,fontSize:10,cursor:"pointer"}}>✕</button>}
                   </div>
                 </div>
               );
             })}
+            {dayEvents.length>0&&(
+              <div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.border}`}}>
+                {dayEvents.map(e=>{ const et=EVENT_TYPES.find(t=>t.key===e.type); return <div key={e.id} style={{fontSize:11,color:et?.color,fontFamily:"'DM Sans', sans-serif",marginBottom:2}}>{et?.icon} {e.title||et?.label}</div>; })}
+              </div>
+            )}
           </div>
         );
-      })}
+      })()}
     </div>
   );
 }
@@ -1415,11 +1459,17 @@ export default function App(){
   useEffect(()=>{
     const u1=fsListen("cit-orders-v3",(d)=>{ if(!writing.current){ setOrders(d); localStorage.setItem("cit-orders-v3",JSON.stringify(d)); } });
     const u2=fsListen("cit-kpi-logs",(d)=>{ if(!writing.current){ setKpiLogs(d); localStorage.setItem("cit-kpi-logs",JSON.stringify(d)); } });
-    const u3=fsListen("cit-work-plans",(d)=>{ if(!writing.current){ setWorkPlans(d); localStorage.setItem("cit-work-plans",JSON.stringify(d)); } });
+    const u3=fsListen("cit-work-plans",(d)=>{ if(!writing.current&&d&&typeof d==="object"){ setWorkPlans(d); localStorage.setItem("cit-work-plans",JSON.stringify(d)); } });
     const u4=fsListen("cit-work-schedules",(d)=>{ if(!writing.current&&Array.isArray(d)){ setWorkSchedules(d); localStorage.setItem("cit-work-schedules",JSON.stringify(d)); } });
+    const u5=fsListen("cit-shop-events",(d)=>{ if(!writing.current&&Array.isArray(d)){ setShopEvents(d); localStorage.setItem("cit-shop-events",JSON.stringify(d)); } });
     return ()=>{ u1(); u2(); u3(); u4(); };
   },[]);
   if(!role) return <LoginScreen onBoss={()=>setRole("boss")} onTeam={()=>setRole("team")}/>;
+  // Save all state to Firebase immediately on change
+  useEffect(()=>{ if(Object.keys(workPlans).length>0){ saveData("cit-work-plans",workPlans); writing.current=true; fsSet("cit-work-plans",workPlans).then(()=>{writing.current=false;}); } },[workPlans]);
+  useEffect(()=>{ saveData("cit-work-schedules",workSchedules); writing.current=true; fsSet("cit-work-schedules",workSchedules).then(()=>{writing.current=false;}); },[workSchedules]);
+  useEffect(()=>{ saveData("cit-shop-events",shopEvents); writing.current=true; fsSet("cit-shop-events",shopEvents).then(()=>{writing.current=false;}); },[shopEvents]);
+
   const isBoss=role==="boss";
   const add=o=>{ const next=[o,...orders]; writing.current=true; fsSet("cit-orders-v3",next).then(()=>{ writing.current=false; }); setOrders(next); localStorage.setItem("cit-orders-v3",JSON.stringify(next)); };
   const upd=o=>{ const next=orders.map(x=>x.id===o.id?o:x); writing.current=true; fsSet("cit-orders-v3",next).then(()=>{ writing.current=false; }); setOrders(next); localStorage.setItem("cit-orders-v3",JSON.stringify(next)); };
