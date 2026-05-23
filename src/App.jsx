@@ -101,6 +101,22 @@ function kpiPass(e){
   if(dt==="depend"){ return !!e.dependPass; }
   return false;
 }
+// Count how many days an order has been worked on (tickets used)
+function ticketsUsed(orderId, kpiLogs) {
+  return Object.keys(kpiLogs||{}).filter(key=>{
+    const e=kpiLogs[key];
+    return (e?.linkedOrders||[]).includes(String(orderId));
+  }).length;
+}
+// Get total tickets for an order based on size/estimatedDays
+function totalTickets(order) {
+  if(order.estimatedDays) return Number(order.estimatedDays);
+  if(order.size==="เล็ก") return 1;
+  if(order.size==="กลาง") return 2;
+  if(order.size==="ใหญ่") return 4;
+  return 1;
+}
+
 async function uploadToCloudinary(file){
   const fd=new FormData();
   fd.append("file",file);
@@ -172,7 +188,7 @@ function ImageUploader({images,onChange,label}){
 }
 
 // ── ORDER CARD ────────────────────────────────────────
-function OrderCard({order,onUpdate,onDelete,isBoss}){
+function OrderCard({order,onUpdate,onDelete,isBoss,kpiLogs}){
   const [open,setOpen]=useState(false);
   const st=STATUSES.find(s=>s.key===order.status)||STATUSES[0];
   const pr=PRIORITIES.find(p=>p.key===order.priority)||PRIORITIES[1];
@@ -211,6 +227,16 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
             {isBoss&&!order.fullPaid&&(order.price||0)>(order.deposit||0)&&<Pill color={C.danger}>ค้าง ฿{fmt((order.price||0)-(order.deposit||0))}</Pill>}
           </div>
           <div style={{marginTop:6}}><MiniProgress progress={order.status==="done"?100:(order.progress||0)}/></div>
+          {(()=>{
+            const total=totalTickets(order);
+            const used=ticketsUsed(order.id, kpiLogs||{});
+            const remaining=Math.max(0,total-used);
+            if(total<=1&&!order.estimatedDays) return null;
+            return <div style={{display:"flex",gap:3,marginTop:5,alignItems:"center"}}>
+              {Array.from({length:total}).map((_,i)=><div key={i} style={{width:10,height:10,borderRadius:2,background:i<(total-remaining)?C.border:C.accent+"60",border:`1px solid ${i<(total-remaining)?C.border:C.accent}`}}/>)}
+              <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:C.muted,marginLeft:3}}>{remaining}d left</span>
+            </div>;
+          })()}
         </div>
       </div>
       {open&&(
@@ -279,6 +305,26 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
               {[0,25,50,75,100].map(p=><button key={p} onClick={()=>onUpdate({...order,progress:p})} style={{fontSize:9,color:Math.round(order.progress||0)===p?C.accent:C.muted,background:"transparent",border:`1px solid ${Math.round(order.progress||0)===p?C.accent:C.border}`,borderRadius:4,padding:"2px 8px",cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>{p}%</button>)}
             </div>
           </div>
+          {/* Tickets */}
+          {(()=>{
+            const total=totalTickets(order);
+            const used=ticketsUsed(order.id, {});
+            const remaining=Math.max(0,total-used);
+            return(
+              <div style={{marginBottom:10,background:C.bg,borderRadius:8,padding:"10px 12px",border:`1px solid ${C.border}`}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <label style={S.lbl}>Work Tickets</label>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:remaining===0?C.ok:C.accent}}>{remaining}/{total} เหลือ</span>
+                </div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                  {Array.from({length:total}).map((_,i)=>{
+                    const isUsed=i<(total-remaining);
+                    return <div key={i} style={{width:28,height:28,borderRadius:5,background:isUsed?"#1a1d24":C.accent+"30",border:`1px solid ${isUsed?C.border:C.accent}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:isUsed?C.muted:C.accent}}>{isUsed?"✓":"○"}</div>;
+                  })}
+                </div>
+              </div>
+            );
+          })()}
           {/* Note */}
           {order.note&&<div style={{marginBottom:10,padding:"8px 10px",background:C.bg,borderRadius:6,borderLeft:`2px solid ${C.border}`}}><div style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace",marginBottom:2}}>NOTE</div><div style={{fontSize:13,color:C.muted}}>{order.note}</div></div>}
           {/* Actions */}
@@ -296,7 +342,7 @@ function OrderCard({order,onUpdate,onDelete,isBoss}){
 
 // ── ADD MODAL ─────────────────────────────────────────
 function AddModal({onClose,onAdd,nextId,isBoss}){
-  const [form,setForm]=useState({customer:"",model:SHOE_TYPES[0],customModel:"",size:"กลาง",estimatedDays:"",deadline:"",priority:"normal",assignee:TEAM[0],note:"",images:[],designImages:[],price:"",deposit:"",depositPaid:false,fullPaid:false,cowork:false,coworkNote:"",platform:"",orderType:"normal",progress:0});
+  const [form,setForm]=useState({customer:"",model:SHOE_TYPES[0],customModel:"",size:"กลาง",estimatedDays:"",tickets:"",deadline:"",priority:"normal",assignee:TEAM[0],note:"",images:[],designImages:[],price:"",deposit:"",depositPaid:false,fullPaid:false,cowork:false,coworkNote:"",platform:"",orderType:"normal",progress:0});
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   const ok=form.customer&&form.deadline;
   return(
@@ -331,6 +377,17 @@ function AddModal({onClose,onAdd,nextId,isBoss}){
               <select style={S.inp} value={form.size} onChange={e=>set("size",e.target.value)}>{SHOE_SIZES.map(t=><option key={t}>{t}</option>)}</select>
               {form.size==="กำหนดเอง"&&<input type="number" style={{...S.inp,marginTop:6}} value={form.estimatedDays} onChange={e=>set("estimatedDays",e.target.value)} placeholder="จำนวนวัน"/>}
             </div>
+          </div>
+          {/* Tickets selector */}
+          <div>
+            <label style={S.lbl}>จำนวน Tickets (วันที่ใช้ทำ)</label>
+            <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+              {[1,2,3,4,5,7,10,14].map(n=>(
+                <button key={n} onClick={()=>set("tickets",form.tickets===n?"":n)} style={{width:36,height:36,background:form.tickets===n?C.accent+"30":"transparent",color:form.tickets===n?C.accent:C.muted,border:`1px solid ${form.tickets===n?C.accent:C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontSize:12,cursor:"pointer",fontWeight:600}}>{n}</button>
+              ))}
+              <input type="number" min="1" style={{...S.inp,width:60,padding:"6px 8px",textAlign:"center"}} value={typeof form.tickets==="number"&&![1,2,3,4,5,7,10,14].includes(form.tickets)?form.tickets:""} onChange={e=>set("tickets",Number(e.target.value))} placeholder="?"/>
+            </div>
+            {form.tickets&&<div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}>{Array.from({length:form.tickets}).map((_,i)=><div key={i} style={{width:12,height:12,borderRadius:2,background:C.accent+"40",border:`1px solid ${C.accent}`}}/>)}</div>}
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
             <div><label style={S.lbl}>Deadline *</label><input type="date" style={S.inp} value={form.deadline} onChange={e=>set("deadline",e.target.value)}/></div>
@@ -666,7 +723,12 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
   const [logs,setLogs]=useState(()=>load("cit-kpi-logs",{}));
   const [selDate,setSelDate]=useState(todayKey());
   const [selMember,setSelMember]=useState(TEAM[0]);
-  const setEntry=u=>{ const next={...logs,[`${selDate}__${selMember}`]:u}; setLogs(next); save("cit-kpi-logs",next); fsSet("cit-kpi-logs",next); };
+  const setEntry=u=>{ 
+    const next={...logs,[`${selDate}__${selMember}`]:u}; 
+    setLogs(next); 
+    save("cit-kpi-logs",next); 
+    fsSet("cit-kpi-logs",next); 
+  };
   const setField=(sec,fld,val)=>setEntry({...entry,[sec]:{...(entry[sec]||{}),[fld]:Number(val)||0}});
   const assignedDT=workPlans?.[selDate]?.[selMember]||null;
   const entry=logs[`${selDate}__${selMember}`]||{dayType:assignedDT||"production",production:{},content:{},design:{},note:"",bossComment:"",linkedOrders:[],dependTasks:"",dependResult:""};
@@ -927,6 +989,155 @@ function FinanceView({orders}){
   );
 }
 
+// ── STATS VIEW ────────────────────────────────────────
+function StatsView({orders,kpiLogs,workPlans}){
+  const now=new Date();
+  const [selMember,setSelMember]=useState(TEAM[0]);
+  const [selMonth,setSelMonth]=useState(now.getMonth());
+  const [selYear,setSelYear]=useState(now.getFullYear());
+  const navM=d=>{ let m=selMonth+d,y=selYear; if(m<0){m=11;y--;}if(m>11){m=0;y++;}setSelMonth(m);setSelYear(y); };
+  const mk=`${selYear}-${String(selMonth+1).padStart(2,"0")}`;
+  const daysInMonth=new Date(selYear,selMonth+1,0).getDate();
+
+  // Calculate stats for selected member in selected month
+  const dayStats=[];
+  for(let d=1;d<=daysInMonth;d++){
+    const dk=`${mk}-${String(d).padStart(2,"0")}`;
+    const entry=kpiLogs[`${dk}__${selMember}`];
+    const assignedDT=workPlans?.[dk]?.[selMember]||null;
+    if(!entry&&!assignedDT) continue;
+    const dt=assignedDT||entry?.dayType;
+    const passed=entry?kpiPass({...entry,dayType:dt}):null;
+    const linked=(entry?.linkedOrders||[]).map(id=>orders.find(o=>String(o.id)===String(id))).filter(Boolean);
+    dayStats.push({dk,dt,passed,entry,linked,d});
+  }
+
+  const totalDays=dayStats.filter(d=>d.entry).length;
+  const passDays=dayStats.filter(d=>d.passed===true).length;
+  const failDays=dayStats.filter(d=>d.passed===false).length;
+  const passRate=totalDays>0?Math.round((passDays/totalDays)*100):null;
+
+  // Weekly breakdown
+  const weeks=[];
+  for(let w=0;w<5;w++){
+    const wDays=dayStats.filter(d=>Math.ceil(d.d/7)===w+1);
+    if(wDays.length===0) continue;
+    const wPass=wDays.filter(d=>d.passed===true).length;
+    const wTotal=wDays.filter(d=>d.entry).length;
+    weeks.push({w:w+1,pass:wPass,total:wTotal,rate:wTotal>0?Math.round((wPass/wTotal)*100):null});
+  }
+
+  // Orders participated in
+  const participatedOrders=[...new Set(dayStats.flatMap(d=>d.linked.map(o=>o.id)))].map(id=>orders.find(o=>o.id===id)).filter(Boolean);
+
+  // Production stats
+  const prodDays=dayStats.filter(d=>d.dt==="production"&&d.entry);
+  const avgSmall=prodDays.length>0?(prodDays.reduce((s,d)=>s+(d.entry?.production?.small||0),0)/prodDays.length).toFixed(2):0;
+  const avgMedium=prodDays.length>0?(prodDays.reduce((s,d)=>s+(d.entry?.production?.medium||0),0)/prodDays.length).toFixed(2):0;
+  const avgLarge=prodDays.length>0?(prodDays.reduce((s,d)=>s+(d.entry?.production?.large||0),0)/prodDays.length).toFixed(2):0;
+  const avgFootage=prodDays.length>0?(prodDays.reduce((s,d)=>s+(d.entry?.production?.footage||0),0)/prodDays.length).toFixed(1):0;
+
+  return(
+    <div>
+      {/* Member selector */}
+      <div style={{display:"flex",gap:6,marginBottom:14}}>
+        {TEAM.map(m=><button key={m} onClick={()=>setSelMember(m)} style={{flex:1,padding:"10px",background:selMember===m?C.accent+"25":"transparent",color:selMember===m?C.accent:C.muted,border:`1px solid ${selMember===m?C.accent:C.border}`,borderRadius:8,fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>{m}</button>)}
+      </div>
+      {/* Month nav */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <button onClick={()=>navM(-1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"5px 12px",cursor:"pointer"}}>‹</button>
+        <span style={{fontFamily:"'DM Mono',monospace",fontSize:14,color:C.text}}>{MONTHS_TH[selMonth]} {selYear}</span>
+        <button onClick={()=>navM(1)} style={{background:"none",border:`1px solid ${C.border}`,color:C.muted,borderRadius:5,padding:"5px 12px",cursor:"pointer"}}>›</button>
+      </div>
+      {/* KPI Summary */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>
+        {[
+          {l:"PASS RATE",v:passRate===null?"—":`${passRate}%`,c:passRate===null?C.muted:passRate>=80?C.ok:passRate>=50?"#f59e0b":C.danger},
+          {l:"PASSED",v:passDays,c:C.ok},
+          {l:"MISSED",v:failDays,c:C.danger},
+        ].map(({l,v,c})=>(
+          <div key={l} style={{background:C.surface,border:`1px solid ${C.border}`,borderTop:`2px solid ${c}`,borderRadius:8,padding:"12px",textAlign:"center"}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:22,color:c}}>{v}</div>
+            <div style={{fontSize:8,color:C.muted,fontFamily:"'DM Mono',monospace",letterSpacing:1,marginTop:2}}>{l}</div>
+          </div>
+        ))}
+      </div>
+      {/* Pass rate bar */}
+      {passRate!==null&&<div style={{...S.card,marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+          <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:C.muted}}>KPI Pass Rate</span>
+          <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:passRate>=80?C.ok:passRate>=50?"#f59e0b":C.danger,fontWeight:700}}>{passRate}%</span>
+        </div>
+        <div style={{height:6,background:C.border,borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${passRate}%`,background:passRate>=80?C.ok:passRate>=50?"#f59e0b":C.danger,borderRadius:3}}/></div>
+      </div>}
+      {/* Weekly breakdown */}
+      {weeks.length>0&&<div style={S.card}>
+        <div style={{fontSize:9,color:C.accent,fontFamily:"'DM Mono',monospace",letterSpacing:2,marginBottom:10}}>WEEKLY BREAKDOWN</div>
+        {weeks.map(({w,pass,total,rate})=>(
+          <div key={w} style={{marginBottom:8}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+              <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:C.muted}}>Week {w}</span>
+              <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:rate===null?C.muted:rate>=80?C.ok:rate>=50?"#f59e0b":C.danger}}>{total===0?"ไม่มีข้อมูล":`${pass}/${total} (${rate}%)`}</span>
+            </div>
+            {rate!==null&&<div style={{height:3,background:C.border,borderRadius:2}}><div style={{height:"100%",width:`${rate}%`,background:rate>=80?C.ok:rate>=50?"#f59e0b":C.danger,borderRadius:2}}/></div>}
+          </div>
+        ))}
+      </div>}
+      {/* Production averages */}
+      {prodDays.length>0&&<div style={S.card}>
+        <div style={{fontSize:9,color:C.accent,fontFamily:"'DM Mono',monospace",letterSpacing:2,marginBottom:10}}>PRODUCTION AVERAGE / วัน</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          {[{l:"งานเล็ก",v:avgSmall,t:1.5},{l:"งานกลาง",v:avgMedium,t:1},{l:"งานใหญ่",v:avgLarge,t:0.25},{l:"Footage",v:avgFootage,t:2}].map(({l,v,t})=>(
+            <div key={l} style={{background:C.bg,borderRadius:6,padding:"8px 10px"}}>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:C.muted,letterSpacing:1,marginBottom:3}}>{l}</div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:18,color:Number(v)>=t?C.ok:C.muted}}>{v}</div>
+              <div style={{fontSize:7,color:C.muted,fontFamily:"'DM Mono',monospace"}}>เป้า {t}</div>
+            </div>
+          ))}
+        </div>
+      </div>}
+      {/* Participated orders */}
+      {participatedOrders.length>0&&<div style={S.card}>
+        <div style={{fontSize:9,color:C.accent,fontFamily:"'DM Mono',monospace",letterSpacing:2,marginBottom:10}}>ออเดอร์ที่มีส่วนร่วม</div>
+        {participatedOrders.map(o=>{ const st=STATUSES.find(s=>s.key===o.status); return(
+          <div key={o.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${C.border}`}}>
+            <div>
+              <div style={{fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,color:C.text}}>{o.customer}</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:C.muted,marginTop:1}}>{o.model}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:st?.color,background:st?.color+"18",borderRadius:3,padding:"2px 6px",marginBottom:3}}>{st?.label}</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:C.muted}}>{Math.round(o.progress||0)}%</div>
+            </div>
+          </div>
+        ); })}
+      </div>}
+      {/* Day by day log */}
+      {dayStats.length>0&&<div style={S.card}>
+        <div style={{fontSize:9,color:C.accent,fontFamily:"'DM Mono',monospace",letterSpacing:2,marginBottom:10}}>DAILY LOG</div>
+        {dayStats.map(({dk,dt,passed,d,linked})=>{
+          const dtObj=DAY_TYPES.find(x=>x.key===dt);
+          return(
+            <div key={dk} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"6px 0",borderBottom:`1px solid ${C.border}`}}>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:C.muted,minWidth:36}}>{String(d).padStart(2,"0")}</div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:linked.length>0?3:0}}>
+                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:dtObj?.color,background:dtObj?.color+"15",borderRadius:3,padding:"1px 6px"}}>{dtObj?.short}</span>
+                  {passed===true&&<span style={{fontSize:9,color:C.ok,fontFamily:"'DM Mono',monospace"}}>✓</span>}
+                  {passed===false&&<span style={{fontSize:9,color:C.danger,fontFamily:"'DM Mono',monospace"}}>✗</span>}
+                  {passed===null&&<span style={{fontSize:9,color:C.muted,fontFamily:"'DM Mono',monospace"}}>—</span>}
+                </div>
+                {linked.length>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:C.muted}}>{linked.map(o=>o.customer).join(", ")}</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>}
+      {dayStats.length===0&&<div style={{textAlign:"center",color:C.muted,padding:40,fontFamily:"'DM Mono',monospace",fontSize:11}}>ไม่มีข้อมูลเดือนนี้</div>}
+    </div>
+  );
+}
+
 // ── DASHBOARD ─────────────────────────────────────────
 function Dashboard({orders,kpiLogs,workPlans}){
   const totalRev=orders.reduce((s,o)=>s+(o.price||0),0);
@@ -1040,7 +1251,7 @@ export default function App(){
     .filter(o=>!search||o.customer?.includes(search)||o.model?.toLowerCase().includes(search.toLowerCase()))
     .sort((a,b)=>{ const p={urgent:0,normal:1,low:2}; return (p[a.priority]??1)-(p[b.priority]??1)||new Date(a.deadline)-new Date(b.deadline); });
   const counts=Object.fromEntries(STATUSES.map(s=>[s.key,orders.filter(o=>o.status===s.key).length]));
-  const TABS=[{k:"orders",l:"Orders"},{k:"calendar",l:"Calendar"},{k:"kpi",l:"KPI"},...(isBoss?[{k:"planner",l:"Planner"},{k:"finance",l:"Finance"},{k:"dashboard",l:"Dashboard"}]:[])];
+  const TABS=[{k:"orders",l:"Orders"},{k:"calendar",l:"Calendar"},{k:"kpi",l:"KPI"},...(isBoss?[{k:"planner",l:"Planner"},{k:"finance",l:"Finance"},{k:"stats",l:"Stats"},{k:"dashboard",l:"Dashboard"}]:[])];
 
   return(
     <div style={{minHeight:"100vh",background:C.bg,color:C.text}}>
@@ -1083,7 +1294,7 @@ export default function App(){
                   <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:C.muted}}>({group.length})</span>
                   <div style={{flex:1,height:1,background:st.color+"22"}}/>
                 </div>
-                {group.map(o=><OrderCard key={o.id} order={o} onUpdate={upd} onDelete={del} isBoss={isBoss}/>)}
+                {group.map(o=><OrderCard key={o.id} order={o} onUpdate={upd} onDelete={del} isBoss={isBoss} kpiLogs={kpiLogs}/>)}
               </div>
             ); })}
             {filtered.length===0&&<div style={{textAlign:"center",color:C.muted,padding:60,fontFamily:"'DM Mono',monospace",letterSpacing:2,fontSize:12}}>NO ORDERS</div>}
@@ -1093,6 +1304,7 @@ export default function App(){
         {tab==="kpi"&&<KpiTracker isBoss={isBoss} workPlans={workPlans} orders={orders} setOrders={upd_orders=>{ setOrders(upd_orders); save("cit-orders-v3",upd_orders); fsSet("cit-orders-v3",upd_orders); }}/>}
         {tab==="planner"&&isBoss&&<WorkPlanner workPlans={workPlans} setWorkPlans={setWorkPlans} workSchedules={workSchedules} setWorkSchedules={setWorkSchedules} shopEvents={shopEvents} setShopEvents={setShopEvents} orders={orders}/>}
         {tab==="finance"&&isBoss&&<FinanceView orders={orders}/>}
+        {tab==="stats"&&isBoss&&<StatsView orders={orders} kpiLogs={kpiLogs} workPlans={workPlans}/>}
         {tab==="dashboard"&&isBoss&&<Dashboard orders={orders} kpiLogs={kpiLogs} workPlans={workPlans}/>}
       </div>
       {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={add} nextId={nextId} isBoss={isBoss}/>}
