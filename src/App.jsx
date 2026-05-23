@@ -794,8 +794,24 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
                 const st2=STATUSES.find(s=>s.key===o.status);
                 return(
                   <div key={o.id}>
-                    <button onClick={()=>{ const cur=entry.linkedOrders||[]; const next=linked?cur.filter(x=>x!==String(o.id)):[...cur,String(o.id)]; setEntry({...entry,linkedOrders:next}); }} style={{padding:"5px 10px",background:linked?st2?.color+"25":"transparent",color:linked?st2?.color:C.muted,border:`1px solid ${linked?st2?.color+"55":C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",gap:4,width:"100%"}}>
-                      {linked&&<span>✓</span>}<span style={{fontWeight:600}}>{o.customer}</span><span style={{fontSize:9,opacity:0.6,marginLeft:2}}>{o.model?.split(" ").slice(0,2).join(" ")}</span>
+                    <button onClick={()=>{ const cur=entry.linkedOrders||[]; const next=linked?cur.filter(x=>x!==String(o.id)):[...cur,String(o.id)]; setEntry({...entry,linkedOrders:next}); }} style={{padding:"5px 10px",background:linked?st2?.color+"25":"transparent",color:linked?st2?.color:C.muted,border:`1px solid ${linked?st2?.color+"55":C.border}`,borderRadius:6,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",gap:4,width:"100%",justifyContent:"space-between"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:4}}>
+                        {linked&&<span>✓</span>}<span style={{fontWeight:600}}>{o.customer}</span><span style={{fontSize:9,opacity:0.6,marginLeft:2}}>{o.model?.split(" ").slice(0,2).join(" ")}</span>
+                      </div>
+                      {(()=>{
+                        const total=totalTickets(o);
+                        const used=ticketsUsed(o.id, logs||{});
+                        const remaining=Math.max(0,total-used);
+                        const tickColor=remaining===0?C.danger:remaining===1?"#f59e0b":C.ok;
+                        return(
+                          <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+                            <div style={{display:"flex",gap:2}}>
+                              {Array.from({length:total}).map((_,i)=><div key={i} style={{width:7,height:7,borderRadius:1,background:i<(total-remaining)?C.border:tickColor+"80",border:`1px solid ${i<(total-remaining)?C.border:tickColor}`}}/>)}
+                            </div>
+                            <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:tickColor,minWidth:14}}>{remaining}d</span>
+                          </div>
+                        );
+                      })()}
                     </button>
                     {linked&&(
                       <div style={{padding:"8px 10px",background:C.surface,borderRadius:"0 0 6px 6px",border:`1px solid ${st2?.color}33`,borderTop:"none"}}>
