@@ -229,7 +229,7 @@ function OrderCard({order,onUpdate,onDelete,isBoss,kpiLogs}){
           <div style={{marginTop:6}}><MiniProgress progress={order.status==="done"?100:(order.progress||0)}/></div>
           {(()=>{
             const total=totalTickets(order);
-            const used=ticketsUsed(order.id, kpiLogs||{});
+            const used=order.status==="queue"?0:ticketsUsed(order.id, kpiLogs||{});
             const remaining=Math.max(0,total-used);
             if(total<=1&&!order.estimatedDays) return null;
             return <div style={{display:"flex",gap:3,marginTop:5,alignItems:"center"}}>
@@ -800,15 +800,22 @@ function KpiTracker({isBoss,workPlans,orders,setOrders}){
                       </div>
                       {(()=>{
                         const total=totalTickets(o);
-                        const used=ticketsUsed(o.id, logs||{});
+                        const notStarted=o.status==="queue";
+                        const used=notStarted?0:ticketsUsed(o.id, logs||{});
                         const remaining=Math.max(0,total-used);
-                        const tickColor=remaining===0?C.danger:remaining===1?"#f59e0b":C.ok;
+                        const tickColor=notStarted?"#555":remaining===0?C.danger:remaining===1?"#f59e0b":C.ok;
                         return(
                           <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
-                            <div style={{display:"flex",gap:2}}>
-                              {Array.from({length:total}).map((_,i)=><div key={i} style={{width:7,height:7,borderRadius:1,background:i<(total-remaining)?C.border:tickColor+"80",border:`1px solid ${i<(total-remaining)?C.border:tickColor}`}}/>)}
-                            </div>
-                            <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:tickColor,minWidth:14}}>{remaining}d</span>
+                            {notStarted?(
+                              <span style={{fontFamily:"'DM Mono',monospace",fontSize:7,color:"#555",letterSpacing:0.5}}>NOT STARTED</span>
+                            ):(
+                              <>
+                                <div style={{display:"flex",gap:2}}>
+                                  {Array.from({length:total}).map((_,i)=><div key={i} style={{width:7,height:7,borderRadius:1,background:i<(total-remaining)?C.border:tickColor+"80",border:`1px solid ${i<(total-remaining)?C.border:tickColor}`}}/>)}
+                                </div>
+                                <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:tickColor,minWidth:14}}>{remaining}d</span>
+                              </>
+                            )}
                           </div>
                         );
                       })()}
